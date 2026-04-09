@@ -34,44 +34,70 @@ public class Pedido {
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
-    public Long getId() {
-        return id;
+    // ── CU1: campos nuevos ───────────────────────────────────────────────────
+
+    /** Nombre del cliente que hizo el pedido (simulado desde la plataforma). */
+    @Column(nullable = false, length = 120)
+    private String nombreCliente;
+
+    /**
+     * Prioridad calculada automáticamente al recibir el pedido.
+     * 1 = Alta, 2 = Media, 3 = Baja.
+     * Se asigna en función del tiempoLimiteMin: <= 20 min → Alta, <= 40 → Media, resto → Baja.
+     */
+    @Column(nullable = false)
+    private int prioridad = 2;
+
+    /**
+     * Minutos máximos acordados con la plataforma para entregar el pedido.
+     * Permite calcular la prioridad automáticamente.
+     */
+    @Column(nullable = false)
+    private int tiempoLimiteMin = 30;
+
+    // ── Getters y Setters ────────────────────────────────────────────────────
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public EstadoPedido getEstado() { return estado; }
+    public void setEstado(EstadoPedido estado) { this.estado = estado; }
+
+    public String getPlataformaOrigen() { return plataformaOrigen; }
+    public void setPlataformaOrigen(String plataformaOrigen) { this.plataformaOrigen = plataformaOrigen; }
+
+    public Marca getMarca() { return marca; }
+    public void setMarca(Marca marca) { this.marca = marca; }
+
+    public LocalDateTime getTimestamp() { return timestamp; }
+    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+
+    public String getNombreCliente() { return nombreCliente; }
+    public void setNombreCliente(String nombreCliente) { this.nombreCliente = nombreCliente; }
+
+    public int getPrioridad() { return prioridad; }
+    public void setPrioridad(int prioridad) { this.prioridad = prioridad; }
+
+    public int getTiempoLimiteMin() { return tiempoLimiteMin; }
+    public void setTiempoLimiteMin(int tiempoLimiteMin) { this.tiempoLimiteMin = tiempoLimiteMin; }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    /** Etiqueta legible de la prioridad para mostrarse en la vista. */
+    public String getPrioridadLabel() {
+        return switch (prioridad) {
+            case 1 -> "Alta";
+            case 2 -> "Media";
+            default -> "Baja";
+        };
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public EstadoPedido getEstado() {
-        return estado;
-    }
-
-    public void setEstado(EstadoPedido estado) {
-        this.estado = estado;
-    }
-
-    public String getPlataformaOrigen() {
-        return plataformaOrigen;
-    }
-
-    public void setPlataformaOrigen(String plataformaOrigen) {
-        this.plataformaOrigen = plataformaOrigen;
-    }
-
-    public Marca getMarca() {
-        return marca;
-    }
-
-    public void setMarca(Marca marca) {
-        this.marca = marca;
-    }
-
-    public LocalDateTime getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
+    /** Clase CSS asociada a la prioridad (para colorear la tarjeta). */
+    public String getPrioridadCss() {
+        return switch (prioridad) {
+            case 1 -> "prioridad-alta";
+            case 2 -> "prioridad-media";
+            default -> "prioridad-baja";
+        };
     }
 }
-
