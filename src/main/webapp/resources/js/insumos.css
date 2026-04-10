@@ -1,0 +1,204 @@
+/* ── insumos.css  CU3 – Entrada de Insumos ─────────────────────────────── */
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.subtitle {
+    color: #6b7280;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.btn-back {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    padding: 0.45rem 0.9rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.875rem;
+    white-space: nowrap;
+}
+.btn-back:hover { background: #e5e7eb; text-decoration: none; }
+
+/* ── Secciones ── */
+.seccion {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1.2rem;
+    margin-bottom: 1.5rem;
+}
+
+.seccion-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.9rem;
+}
+
+.seccion h3, .seccion-header h3 { margin: 0; }
+
+/* ── Alertas ── */
+.alert {
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+.alert-success { background: #d1fae5; border-left: 4px solid #10b981; color: #065f46; }
+.alert-error   { background: #fee2e2; border-left: 4px solid #ef4444; color: #991b1b; }
+
+/* ── Tabla ── */
+.tbl {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+.tbl th {
+    background: #f3f4f6;
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 2px solid #d1d5db;
+    font-weight: 600;
+}
+.tbl td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: middle;
+}
+.tbl tbody tr:hover { background: #f0f9ff; }
+.row-critico { background: #fff7ed !important; }
+.row-warn    { background: #fffbeb !important; }
+
+/* ── Badges ── */
+.badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.badge-ok   { background: #d1fae5; color: #065f46; }
+.badge-warn { background: #fef3c7; color: #92400e; }
+.badge-info { background: #dbeafe; color: #1e40af; }
+
+/* ── Botones ── */
+.btn {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: opacity .15s;
+}
+.btn:hover { opacity: .85; }
+.btn-primary   { background: #2563eb; color: #fff; }
+.btn-secondary { background: #6b7280; color: #fff; }
+.btn-danger    { background: #ef4444; color: #fff; }
+.btn-sm        { padding: 0.25rem 0.6rem; font-size: 0.8rem; }
+
+/* ── Formulario ── */
+.fieldset {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+.fieldset legend {
+    font-weight: 600;
+    padding: 0 0.4rem;
+    color: #374151;
+}
+.form-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.form-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 140px;
+    flex: 1;
+}
+.form-group label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.3rem;
+}
+.form-group input,
+.form-group select {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #d1d5db;
+    border-radius: 5px;
+    font-size: 0.875rem;
+}
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37,99,235,.2);
+}
+.hint {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin: 0 0 0.75rem;
+}
+
+/* ── Filas dinámicas de ítems ── */
+.item-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-end;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px dashed #e5e7eb;
+    flex-wrap: wrap;
+}
+
+.form-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+/* ── Comprobante ── */
+.comprobante {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    border-radius: 8px;
+    padding: 1.2rem;
+    margin-bottom: 1.5rem;
+}
+.comprobante h3 { margin-top: 0; }
+
+/* ── Modal ── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+.modal-box {
+    background: #fff;
+    border-radius: 10px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.2);
+}
+.modal-box h3 { margin-top: 0; }
