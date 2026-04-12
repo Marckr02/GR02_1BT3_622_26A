@@ -1,232 +1,219 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="java.util.List, model.Insumo, model.ItemMenu" %>
+<%@ page import="java.util.List, model.Insumo, model.ItemMenu, model.DetalleInsumoMenu, service.MenuService" %>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>CU4 – Bloqueo Automático de Menú</title>
+    <title>CU4 – Monitor de Menu</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/base.css">
     <style>
-        /* ── Paneles ──────────────────────────────────────────────────── */
-        .panel-grid {
+        .section-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin: 1.5rem 0 0.75rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .info-box {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--blue);
+            border-radius: var(--radius);
+            padding: 0.85rem 1.1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        .motivo {
+            font-size: 0.78rem;
+            color: var(--red);
+            margin-top: 0.3rem;
+        }
+        .stock-bar-wrap {
+            background: var(--bg3);
+            border-radius: 3px;
+            height: 5px;
+            width: 70px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 0.4rem;
+            overflow: hidden;
+        }
+        .stock-bar { height: 5px; border-radius: 3px; }
+        .stock-bar.critico { background: #c9404a; }
+        .stock-bar.ok      { background: #40a060; }
+        .resumen-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
         }
-        .panel {
-            background: #f8fafc;
-            border: 1px solid #dbe2ea;
-            border-radius: 8px;
-            padding: 1rem 1.2rem;
+        .resumen-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+            text-align: center;
         }
-        .panel h3 { margin-top: 0; font-size: 1rem; }
-
-        /* ── Tablas ───────────────────────────────────────────────────── */
-        table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-        th    { background: #1e40af; color: #fff; padding: 0.5rem 0.75rem; text-align: left; }
-        td    { padding: 0.45rem 0.75rem; border-bottom: 1px solid #e5e7eb; }
-        tr:hover td { background: #f9fafb; }
-
-        /* ── Badges de estado ─────────────────────────────────────────── */
-        .badge        { display: inline-block; padding: 0.18rem 0.6rem;
-                        border-radius: 999px; font-size: 0.78rem; font-weight: 600; }
-        .badge-critico { background: #fee2e2; color: #991b1b; }
-        .badge-ok      { background: #d1fae5; color: #065f46; }
-        .badge-activo  { background: #d1fae5; color: #065f46; }
-        .badge-bloqueado { background: #fee2e2; color: #991b1b; }
-
-        /* ── Mensajes ─────────────────────────────────────────────────── */
-        .msg-alerta { background: #fef9c3; border: 1px solid #fde047; color: #854d0e;
-                      border-radius: 6px; padding: 0.75rem 1rem; margin-bottom: 1rem; }
-        .msg-ok     { background: #d1fae5; border: 1px solid #6ee7b7; color: #065f46;
-                      border-radius: 6px; padding: 0.75rem 1rem; margin-bottom: 1rem; }
-        .msg-neutro { background: #e0e7ff; border: 1px solid #a5b4fc; color: #3730a3;
-                      border-radius: 6px; padding: 0.75rem 1rem; margin-bottom: 1rem; }
-        .msg-error  { background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b;
-                      border-radius: 6px; padding: 0.75rem 1rem; margin-bottom: 1rem; }
-
-        /* ── Botón de acción ──────────────────────────────────────────── */
-        .btn-bloqueo {
-            padding: 0.65rem 1.6rem;
-            background: #dc2626;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
+        .resumen-card .num {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1;
         }
-        .btn-bloqueo:hover { background: #b91c1c; }
-
-        /* ── Barra de stock visual ────────────────────────────────────── */
-        .stock-bar-wrap { background: #e5e7eb; border-radius: 4px; height: 8px; width: 100px; display: inline-block; vertical-align: middle; }
-        .stock-bar      { height: 8px; border-radius: 4px; }
-        .stock-bar.critico { background: #ef4444; }
-        .stock-bar.ok      { background: #22c55e; }
-
-        /* ── Sección de ciclo automático ─────────────────────────────── */
-        .action-panel {
-            background: #fff7ed;
-            border: 1px solid #fed7aa;
-            border-radius: 8px;
-            padding: 1.2rem 1.5rem;
-            margin-bottom: 2rem;
+        .resumen-card .num.rojo   { color: var(--red); }
+        .resumen-card .num.verde  { color: var(--green); }
+        .resumen-card .num.amarillo { color: var(--yellow); }
+        .resumen-card .lbl {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+            font-weight: 500;
         }
-        .action-panel h3 { margin-top: 0; color: #c2410c; }
     </style>
 </head>
 <body>
+<nav class="navbar">
+    <a class="navbar-brand" href="${pageContext.request.contextPath}/index.jsp">Dark Kitchen</a>
+    <div class="navbar-links">
+        <a href="${pageContext.request.contextPath}/pedidos/recibir">CU1 · Pedidos</a>
+        <a href="${pageContext.request.contextPath}/pedidos/kanban">CU2 · Kanban</a>
+        <a href="${pageContext.request.contextPath}/insumos/entrada">CU3 · Insumos</a>
+        <a href="${pageContext.request.contextPath}/menu/bloqueo" class="active">CU4 · Bloqueo</a>
+    </div>
+</nav>
+
 <div class="container">
+    <div class="page-header">
+        <h2>CU4 – Monitor de Disponibilidad del Menu</h2>
+        <p>Estado actual del menu segun el inventario. El bloqueo y reactivacion de platos ocurre automaticamente al modificar el stock en CU3.</p>
+    </div>
 
-    <h2>CU4 – Bloqueo Automático de Menú por Falta de Stock</h2>
-    <p style="color:#6b7280; margin-top:-0.5rem;">
-        El sistema monitorea los niveles de inventario y desactiva automáticamente
-        los platos que no pueden prepararse por falta de insumos.
-    </p>
+    <div class="info-box">
+        El sistema evalua automaticamente cada plato al registrar o reducir stock en CU3.
+        Un plato se bloquea si alguno de sus insumos no tiene stock suficiente para prepararlo,
+        y se reactiva automaticamente cuando el stock es repuesto.
+    </div>
 
-    <%-- ── Mensajes de resultado del POST (PRG) ─────────────────────────── --%>
     <%
-        String bloqueados  = request.getParameter("bloqueados");
-        String criticosP   = request.getParameter("criticos");
-        String sinCambios  = request.getParameter("sinCambios");
-        String errorBloqueo = (String) request.getAttribute("errorBloqueo");
+        List<ItemMenu> todosItems   = (List<ItemMenu>) request.getAttribute("todosItems");
+        List<Insumo>   todosInsumos = (List<Insumo>)  request.getAttribute("todosInsumos");
+        List<Insumo>   criticos     = (List<Insumo>)  request.getAttribute("criticos");
+        MenuService    menuService  = (MenuService)   request.getAttribute("menuService");
+
+        if (todosItems   == null) todosItems   = new java.util.ArrayList<>();
+        if (todosInsumos == null) todosInsumos = new java.util.ArrayList<>();
+        if (criticos     == null) criticos     = new java.util.ArrayList<>();
+
+        int totalActivos   = 0;
+        int totalBloqueados = 0;
+        for (ItemMenu it : todosItems) {
+            if (it.isActivo()) totalActivos++; else totalBloqueados++;
+        }
     %>
-    <% if (errorBloqueo != null) { %>
-        <div class="msg-error">⚠️ Error al ejecutar el ciclo: <%= errorBloqueo %></div>
-    <% } else if (bloqueados != null) { %>
-        <div class="msg-alerta">
-            🚨 <strong>Alerta de reposición urgente emitida.</strong>
-            Se bloquearon <strong><%= bloqueados %></strong> plato(s)
-            por <strong><%= criticosP %></strong> insumo(s) en nivel crítico.
-            Notificación enviada al Administrador de Bodega.
+
+    <%-- Resumen --%>
+    <div class="resumen-grid">
+        <div class="resumen-card">
+            <div class="num verde"><%= totalActivos %></div>
+            <div class="lbl">Platos disponibles</div>
         </div>
-    <% } else if ("1".equals(sinCambios)) { %>
-        <div class="msg-neutro">
-            ✅ Ciclo ejecutado. Todos los insumos están dentro de niveles aceptables.
-            Ningún plato fue bloqueado.
+        <div class="resumen-card">
+            <div class="num rojo"><%= totalBloqueados %></div>
+            <div class="lbl">Platos bloqueados</div>
         </div>
+        <div class="resumen-card">
+            <div class="num amarillo"><%= criticos.size() %></div>
+            <div class="lbl">Insumos en nivel critico</div>
+        </div>
+    </div>
+
+    <%-- Estado del menu --%>
+    <div class="section-title">Estado del menu</div>
+    <% if (todosItems.isEmpty()) { %>
+    <p style="color:var(--text-muted); font-style:italic; font-size:0.875rem;">
+        No hay platos registrados. Ve a CU3 para registrar insumos y los platos demo se crearan automaticamente.
+    </p>
+    <% } else { %>
+    <div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Plato</th>
+                <th>Marca</th>
+                <th>Disponibilidad</th>
+                <th>Motivo de bloqueo</th>
+            </tr>
+        </thead>
+        <tbody>
+        <% for (ItemMenu plato : todosItems) { %>
+        <tr>
+            <td><strong><%= plato.getNombre() %></strong></td>
+            <td style="color:var(--text-muted)"><%= plato.getMarca() != null ? plato.getMarca().getNombre() : "—" %></td>
+            <td>
+                <span class="badge <%= plato.isActivo() ? "badge-ok" : "badge-bloqueado" %>">
+                    <%= plato.isActivo() ? "Disponible" : "Bloqueado" %>
+                </span>
+            </td>
+            <td>
+                <% if (!plato.isActivo() && menuService != null) {
+                       List<String> motivos = menuService.obtenerMotivosBloqueo(plato);
+                       for (String motivo : motivos) { %>
+                <div class="motivo"><%= motivo %></div>
+                <%     }
+                   } else if (plato.isActivo()) { %>
+                <span style="color:var(--text-muted); font-size:0.82rem;">—</span>
+                <% } %>
+            </td>
+        </tr>
+        <% } %>
+        </tbody>
+    </table>
+    </div>
     <% } %>
 
-    <%-- ── Panel de acción del sistema ──────────────────────────────────── --%>
-    <div class="action-panel">
-        <h3>⚙️ Ejecutar Ciclo de Monitoreo (Sistema como Actor)</h3>
-        <p style="margin:0 0 0.8rem; font-size:0.92rem;">
-            Simula el proceso automático: detecta insumos críticos → identifica platos
-            afectados → desactiva disponibilidad en plataformas de delivery →
-            emite alerta de reposición urgente.
-        </p>
-        <form method="post" action="${pageContext.request.contextPath}/menu/bloqueo">
-            <button type="submit" class="btn-bloqueo">
-                🔒 Ejecutar Bloqueo Automático de Menú
-            </button>
-        </form>
+    <%-- Inventario de insumos --%>
+    <div class="section-title">Inventario de insumos</div>
+    <% if (todosInsumos.isEmpty()) { %>
+    <p style="color:var(--text-muted); font-style:italic; font-size:0.875rem;">Sin insumos registrados.</p>
+    <% } else { %>
+    <div class="table-wrap">
+    <table>
+        <thead>
+            <tr><th>Insumo</th><th>Stock actual</th><th>Stock minimo</th><th>Estado</th></tr>
+        </thead>
+        <tbody>
+        <% for (Insumo ins : todosInsumos) {
+               boolean esCritico = ins.getCantidad() <= ins.getStockMinimo();
+               double pct = ins.getStockMinimo() > 0
+                       ? Math.min(100, (ins.getCantidad() / ins.getStockMinimo()) * 100) : 100; %>
+        <tr>
+            <td><strong><%= ins.getNombre() %></strong></td>
+            <td>
+                <%= ins.getCantidad() %> <%= ins.getUnidad() %>
+                <span class="stock-bar-wrap">
+                    <span class="stock-bar <%= esCritico ? "critico" : "ok" %>"
+                          style="width:<%= (int)Math.min(100, pct) %>%"></span>
+                </span>
+            </td>
+            <td><%= ins.getStockMinimo() %> <%= ins.getUnidad() %></td>
+            <td>
+                <span class="badge <%= esCritico ? "badge-critico" : "badge-ok" %>">
+                    <%= esCritico ? "Critico" : "OK" %>
+                </span>
+            </td>
+        </tr>
+        <% } %>
+        </tbody>
+    </table>
     </div>
+    <% } %>
 
-    <%-- ── Paneles de inventario y menú ─────────────────────────────────── --%>
-    <%
-        List<Insumo>   todosInsumos = (List<Insumo>)   request.getAttribute("todosInsumos");
-        List<ItemMenu> todosItems   = (List<ItemMenu>)  request.getAttribute("todosItems");
-        List<Insumo>   criticos     = (List<Insumo>)   request.getAttribute("criticos");
-        int totalCriticos = (criticos != null) ? criticos.size() : 0;
-    %>
-
-    <div class="panel-grid">
-
-        <%-- ── Panel Inventario ────────────────────────────────────────── --%>
-        <div class="panel">
-            <h3>
-                📦 Inventario de Insumos
-                <% if (totalCriticos > 0) { %>
-                    <span class="badge badge-critico"><%= totalCriticos %> crítico(s)</span>
-                <% } %>
-            </h3>
-            <% if (todosInsumos == null || todosInsumos.isEmpty()) { %>
-                <p style="color:#6b7280; font-style:italic;">Sin insumos registrados.</p>
-            <% } else { %>
-            <table>
-                <thead>
-                    <tr><th>Insumo</th><th>Stock</th><th>Mínimo</th><th>Estado</th></tr>
-                </thead>
-                <tbody>
-                <%
-                    for (Insumo ins : todosInsumos) {
-                        boolean esCritico = ins.getCantidad() <= ins.getStockMinimo();
-                        double pct = ins.getStockMinimo() > 0
-                                ? Math.min(100, (ins.getCantidad() / ins.getStockMinimo()) * 100)
-                                : 100;
-                %>
-                <tr>
-                    <td><strong><%= ins.getNombre() %></strong></td>
-                    <td>
-                        <%= ins.getCantidad() %> <%= ins.getUnidad() %>
-                        <div class="stock-bar-wrap">
-                            <div class="stock-bar <%= esCritico ? "critico" : "ok" %>"
-                                 style="width:<%= (int)pct %>%"></div>
-                        </div>
-                    </td>
-                    <td><%= ins.getStockMinimo() %> <%= ins.getUnidad() %></td>
-                    <td>
-                        <span class="badge <%= esCritico ? "badge-critico" : "badge-ok" %>">
-                            <%= esCritico ? "⚠ Crítico" : "✓ OK" %>
-                        </span>
-                    </td>
-                </tr>
-                <% } %>
-                </tbody>
-            </table>
-            <% } %>
-        </div>
-
-        <%-- ── Panel Menú ──────────────────────────────────────────────── --%>
-        <div class="panel">
-            <h3>🍽️ Estado del Menú</h3>
-            <% if (todosItems == null || todosItems.isEmpty()) { %>
-                <p style="color:#6b7280; font-style:italic;">Sin platos registrados.</p>
-            <% } else { %>
-            <table>
-                <thead>
-                    <tr><th>Plato</th><th>Marca</th><th>Disponibilidad</th></tr>
-                </thead>
-                <tbody>
-                <% for (ItemMenu item : todosItems) { %>
-                <tr>
-                    <td><strong><%= item.getNombre() %></strong></td>
-                    <td style="font-size:0.82rem; color:#6b7280;">
-                        <%= item.getMarca() != null ? item.getMarca().getNombre() : "—" %>
-                    </td>
-                    <td>
-                        <span class="badge <%= item.isActivo() ? "badge-activo" : "badge-bloqueado" %>">
-                            <%= item.isActivo() ? "✓ Activo" : "🔒 Bloqueado" %>
-                        </span>
-                    </td>
-                </tr>
-                <% } %>
-                </tbody>
-            </table>
-            <% } %>
-        </div>
-    </div>
-
-    <%-- ── Leyenda de trazabilidad ───────────────────────────────────────── --%>
-    <details style="margin-top:1rem; font-size:0.85rem; color:#6b7280;">
-        <summary style="cursor:pointer; font-weight:600; color:#374151;">
-            ℹ️ Trazabilidad con el diagrama de robustez CU4
-        </summary>
-        <ul style="margin:0.75rem 0 0 1rem; line-height:1.7;">
-            <li><strong>Monitor de Inventario</strong> → <code>MenuService.detectarInsumosCriticos()</code></li>
-            <li><strong>Analista de Platillos Afectados</strong> → <code>MenuService.identificarPlatosAfectados()</code></li>
-            <li><strong>Gestor de Bloqueo de Platillos</strong> → <code>MenuService.bloquearPlatosAfectados()</code></li>
-            <li><strong>API de Integración con App Delivery</strong> → desactiva <code>ItemMenu.activo = false</code></li>
-            <li><strong>API de Notificaciones</strong> → alerta visible al Administrador de Bodega (mensaje en vista)</li>
-        </ul>
-    </details>
-
-    <hr style="margin:2rem 0; border:none; border-top:1px solid #e5e7eb;">
-    <a href="${pageContext.request.contextPath}/index.jsp">← Volver al inicio</a>
-    &nbsp;&nbsp;
-    <a href="${pageContext.request.contextPath}/insumos/entrada">Ver CU3 – Entrada de Insumos →</a>
-
+    <hr>
+    <a href="${pageContext.request.contextPath}/insumos/entrada">Ir a CU3 – Gestionar Insumos</a>
 </div>
 </body>
 </html>

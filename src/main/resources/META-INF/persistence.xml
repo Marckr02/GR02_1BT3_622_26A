@@ -7,23 +7,31 @@
     <persistence-unit name="darkKitchenPU" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
 
+        <!-- Incremento 1 -->
         <class>model.Pedido</class>
-        <class>model.Insumo</class>
         <class>model.Marca</class>
+        <class>model.EstadoPedido</class>
+        <class>model.Insumo</class>
         <class>model.ItemMenu</class>
         <class>model.DetalleInsumoMenu</class>
 
+        <!-- Incremento 2 – CU3 -->
+        <class>model.OrdenDeCompra</class>
+        <class>model.DetalleOrden</class>
+        <class>model.EstadoOrden</class>
+
         <properties>
             <property name="jakarta.persistence.jdbc.driver" value="org.h2.Driver"/>
-            <property name="jakarta.persistence.jdbc.url" value="jdbc:h2:~/darkkitchen-db;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE"/>
+            <property name="jakarta.persistence.jdbc.url"
+                      value="jdbc:h2:~/darkkitchen-db;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE"/>
             <property name="jakarta.persistence.jdbc.user" value="sa"/>
             <property name="jakarta.persistence.jdbc.password" value=""/>
 
             <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+            <!-- update crea las nuevas tablas sin borrar las existentes -->
             <property name="hibernate.hbm2ddl.auto" value="update"/>
             <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.format_sql" value="true"/>
         </properties>
     </persistence-unit>
 </persistence>
-
