@@ -9,13 +9,14 @@ import javax.servlet.http.HttpServletResponse;
 import model.Insumo;
 import model.ItemMenu;
 import service.MenuService;
-import service.MenuService.ResultadoBloqueo;
 
 /**
- * Servlet para CU4 – Bloqueo automático de menú por falta de stock.
+ * Servlet para CU4 - Monitor de disponibilidad del menu.
  *
- * GET  /menu/bloqueo → muestra el estado actual del inventario y el menú.
- * POST /menu/bloqueo → ejecuta el ciclo de bloqueo automático y redirige (PRG).
+ * Solo GET: muestra el estado actual del menu y del inventario.
+ * El bloqueo/reactivacion ocurre automaticamente en InsumoService
+ * cada vez que el stock cambia (CU3). Este servlet es unicamente
+ * una vista de monitoreo, no realiza acciones.
  */
 public class MenuBloqueoServlet extends HttpServlet {
 
@@ -26,42 +27,27 @@ public class MenuBloqueoServlet extends HttpServlet {
         menuService = new MenuService();
     }
 
-    // ── GET: dashboard de inventario y menú ──────────────────────────────────
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        List<Insumo>   todosInsumos = menuService.listarTodosInsumos();
         List<ItemMenu> todosItems   = menuService.listarTodosItems();
+        List<Insumo>   todosInsumos = menuService.listarTodosInsumos();
         List<Insumo>   criticos     = menuService.detectarInsumosCriticos();
 
-        req.setAttribute("todosInsumos", todosInsumos);
         req.setAttribute("todosItems",   todosItems);
+        req.setAttribute("todosInsumos", todosInsumos);
         req.setAttribute("criticos",     criticos);
+        req.setAttribute("menuService",  menuService);
 
         req.getRequestDispatcher("/WEB-INF/views/cu4-menu-bloqueo.jsp")
                 .forward(req, resp);
     }
 
-    // ── POST: ejecutar ciclo de bloqueo automático ────────────────────────────
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-
-        try {
-            ResultadoBloqueo resultado = menuService.ejecutarCicloDeBloqueo();
-
-            // Pasa resumen de la operación como parámetros de query (PRG)
-            String msg = resultado.hayAlertaUrgente()
-                    ? "bloqueados=" + resultado.getPlatosBloqueados().size()
-                      + "&criticos=" + resultado.getInsumosCriticos().size()
-                    : "sinCambios=1";
-
-            resp.sendRedirect(req.getContextPath() + "/menu/bloqueo?" + msg);
-
-        } catch (Exception e) {
-            req.setAttribute("errorBloqueo", e.getMessage());
-            doGet(req, resp);
-        }
+        // No hay acciones manuales en el CU4
+        doGet(req, resp);
     }
 }

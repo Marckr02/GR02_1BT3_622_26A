@@ -119,11 +119,42 @@ public class PedidoService {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // CU2 – stub (próxima iteración)
+    // CU2 – Actualizar estado en tablero Kanban
     // ─────────────────────────────────────────────────────────────────────────
 
-    public void moverKanbanStub() {
-        // TODO: implementar CU2 – actualizar estado en tablero Kanban
+    /**
+     * Avanza el pedido al siguiente estado en el flujo Kanban:
+     *   RECIBIDO → EN_PREP → LISTO → ENTREGADO
+     *
+     * @param pedidoId ID del pedido a avanzar.
+     * @throws IllegalArgumentException si el pedido no existe o ya está en ENTREGADO.
+     */
+    public void avanzarEstado(Long pedidoId) {
+        Optional<Pedido> pedidoOpt = pedidoDao.findById(pedidoId);
+        if (pedidoOpt.isEmpty()) {
+            throw new IllegalArgumentException("Pedido con id=" + pedidoId + " no encontrado.");
+        }
+
+        Pedido pedido = pedidoOpt.get();
+        EstadoPedido estadoActual = pedido.getEstado();
+
+        EstadoPedido siguienteEstado;
+        switch (estadoActual) {
+            case RECIBIDO:
+                siguienteEstado = EstadoPedido.EN_PREP;
+                break;
+            case EN_PREP:
+                siguienteEstado = EstadoPedido.LISTO;
+                break;
+            case LISTO:
+                siguienteEstado = EstadoPedido.ENTREGADO;
+                break;
+            default:
+                throw new IllegalArgumentException("El pedido P-" + pedidoId + " ya está en estado ENTREGADO.");
+        }
+
+        pedido.setEstado(siguienteEstado);
+        pedidoDao.update(pedido);
     }
 
     // ─────────────────────────────────────────────────────────────────────────

@@ -4,151 +4,173 @@ import dao.InsumoDao;
 import dao.InsumoDaoHibernate;
 import dao.ItemMenuDao;
 import dao.ItemMenuDaoHibernate;
+import dao.MarcaDao;
+import dao.MarcaDaoHibernate;
+import model.DetalleInsumoMenu;
 import model.Insumo;
 import model.ItemMenu;
+import model.Marca;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Servicio para el CU4 – Bloqueo automático de menú por falta de stock.
+ * Servicio para el CU4 - Bloqueo automatico de menu por falta de stock.
  *
- * Flujo (basado en el diagrama de robustez CU4):
- *   1. MonitorDeInventario  → detecta insumos con nivel crítico de stock.
- *   2. AnalistaDePlatillos  → identifica los ItemMenu que usan esos insumos.
- *   3. GestorDeBloqueo      → desactiva los platos afectados.
- *   4. API de Notificaciones → emite alerta de reposición urgente.
+ * Este servicio es invocado automaticamente por InsumoService cada vez que
+ * el stock cambia (sumarStock o reducirStock). No requiere interaccion manual.
+ *
+ * Logica de bloqueo:
+ *   Un plato se BLOQUEA si al menos uno de sus insumos tiene stock < cantidadRequerida.
+ *   Un plato se REACTIVA si TODOS sus insumos tienen stock >= cantidadRequerida.
+ *
+ * Esto garantiza consistencia en ambas direcciones: reducir bloquea, reponer reactiva.
  */
 public class MenuService {
 
-    private final InsumoDao  insumoDao;
+    private final InsumoDao   insumoDao;
     private final ItemMenuDao itemMenuDao;
+    private final MarcaDao    marcaDao;
 
     public MenuService() {
         this.insumoDao   = new InsumoDaoHibernate();
         this.itemMenuDao = new ItemMenuDaoHibernate();
-        inicializarDatosDemo();
+        this.marcaDao    = new MarcaDaoHibernate();
+        inicializarPlatosDemo();
     }
 
-    // ── CU4 Paso 1: Monitor de Inventario ────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
+    // Punto de entrada: llamado por InsumoService tras cualquier cambio de stock
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Evalua todos los platos del menu y actualiza su disponibilidad segun el
+     * stock actual de sus insumos requeridos. Bloquea los que no pueden prepararse
+     * y reactiva los que vuelven a tener stock suficiente.
+     *
+     * Este metodo es el nucleo del CU4 y debe llamarse despues de cualquier
+     * modificacion de stock en InsumoService.
+     */
+    public void sincronizarDisponibilidadMenu() {
+        List<ItemMenu> todosLosPlatos = itemMenuDao.findAllWithInsumos();
+
+        for (ItemMenu plato : todosLosPlatos) {
+            boolean puedePrepararseAhora = puedePrepararse(plato);
+
+            if (!puedePrepararseAhora && plato.isActivo()) {
+                // Bloquear: le falta al menos un insumo
+                plato.setActivo(false);
+                itemMenuDao.update(plato);
+
+            } else if (puedePrepararseAhora && !plato.isActivo()) {
+                // Reactivar: todos los insumos tienen stock suficiente
+                plato.setActivo(true);
+                itemMenuDao.update(plato);
+            }
+            // Si el estado no cambio, no hacer nada
+        }
+    }
+
+    /**
+     * Determina si un plato puede prepararse comparando el stock actual de cada
+     * insumo requerido contra la cantidadRequerida definida en DetalleInsumoMenu.
+     *
+     * Un plato NO puede prepararse si cualquier insumo tiene:
+     *   insumo.getCantidad() < detalle.getCantidadRequerida()
+     */
+    public boolean puedePrepararse(ItemMenu plato) {
+        List<DetalleInsumoMenu> requeridos = plato.getInsumosRequeridos();
+        if (requeridos == null || requeridos.isEmpty()) return true;
+
+        for (DetalleInsumoMenu detalle : requeridos) {
+            Insumo insumo = detalle.getInsumo();
+            if (insumo.getCantidad() < detalle.getCantidadRequerida()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Lecturas para la vista del CU4
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public List<ItemMenu> listarTodosItems()   { return itemMenuDao.findAllWithInsumos(); }
+    public List<Insumo>   listarTodosInsumos() { return insumoDao.findAll(); }
+
+    /**
+     * Devuelve los insumos que estan por debajo de su stockMinimo.
+     * Usado en la vista para mostrar alertas informativas.
+     */
     public List<Insumo> detectarInsumosCriticos() {
         return insumoDao.findAll().stream()
                 .filter(i -> i.getCantidad() <= i.getStockMinimo())
                 .collect(Collectors.toList());
     }
 
-    // ── CU4 Paso 2: Analista de platillos afectados ───────────────────────────
-    public List<ItemMenu> identificarPlatosAfectados(Insumo insumo) {
-        return itemMenuDao.findAll().stream()
-                .filter(ItemMenu::isActivo)
-                .filter(item -> item.getInsumosRequeridos().stream()
-                        .anyMatch(d -> d.getInsumo().getId().equals(insumo.getId())))
-                .collect(Collectors.toList());
-    }
-
-    // ── CU4 Paso 3: Gestor de bloqueo de platillos ───────────────────────────
-    public List<ItemMenu> bloquearPlatosAfectados(List<ItemMenu> platosAfectados) {
-        List<ItemMenu> bloqueados = new ArrayList<>();
-        for (ItemMenu item : platosAfectados) {
-            if (item.isActivo()) {
-                item.setActivo(false);
-                itemMenuDao.update(item);
-                bloqueados.add(item);
+    /**
+     * Para cada plato bloqueado, devuelve cuales insumos son la causa.
+     * Usado en la vista para mostrar el motivo de cada bloqueo.
+     */
+    public List<String> obtenerMotivosBloqueo(ItemMenu plato) {
+        List<String> motivos = new ArrayList<>();
+        for (DetalleInsumoMenu detalle : plato.getInsumosRequeridos()) {
+            Insumo insumo = detalle.getInsumo();
+            if (insumo.getCantidad() < detalle.getCantidadRequerida()) {
+                motivos.add(insumo.getNombre()
+                        + ": disponible " + insumo.getCantidad() + " " + insumo.getUnidad()
+                        + ", requerido " + detalle.getCantidadRequerida() + " " + insumo.getUnidad());
             }
         }
-        return bloqueados;
+        return motivos;
     }
 
-    // ── CU4 Orquestador: ejecuta ciclo completo ───────────────────────────────
-    public ResultadoBloqueo ejecutarCicloDeBloqueo() {
-        List<Insumo> criticos    = detectarInsumosCriticos();
-        List<ItemMenu> afectados = new ArrayList<>();
+    // ─────────────────────────────────────────────────────────────────────────
+    // Demo: platos con cantidades requeridas reales vinculados a los insumos CU3
+    // ─────────────────────────────────────────────────────────────────────────
 
-        for (Insumo insumo : criticos) {
-            afectados.addAll(identificarPlatosAfectados(insumo));
-        }
+    private void inicializarPlatosDemo() {
+        if (!itemMenuDao.findAll().isEmpty()) return;
 
-        List<ItemMenu> sinDuplicados = afectados.stream()
-                .distinct()
-                .collect(Collectors.toList());
+        List<Insumo> insumos = insumoDao.findAll();
+        if (insumos.isEmpty()) return;
 
-        List<ItemMenu> bloqueados = bloquearPlatosAfectados(sinDuplicados);
-
-        return new ResultadoBloqueo(criticos, sinDuplicados, bloqueados);
-    }
-
-    // ── Lecturas de soporte ───────────────────────────────────────────────────
-    public List<Insumo>   listarTodosInsumos() { return insumoDao.findAll(); }
-    public List<ItemMenu> listarTodosItems()   { return itemMenuDao.findAll(); }
-
-    // ── Demo: inicializa datos de ejemplo si la BD está vacía ─────────────────
-    private void inicializarDatosDemo() {
-        if (!insumoDao.findAll().isEmpty()) return;
-
-        Insumo tomate = crearInsumo("Tomate",  2.0,  5.0, "kg");   // crítico
-        Insumo queso  = crearInsumo("Queso",   8.0,  3.0, "kg");   // ok
-        Insumo harina = crearInsumo("Harina",  1.5, 10.0, "kg");   // crítico
-        Insumo arroz  = crearInsumo("Arroz",  15.0,  5.0, "kg");   // ok
-        Insumo salmon = crearInsumo("Salmón",  0.5,  2.0, "kg");   // crítico
-
-        dao.MarcaDao marcaDao = new dao.MarcaDaoHibernate();
-        model.Marca marca = marcaDao.findAll().stream().findFirst().orElseGet(() -> {
-            model.Marca m = new model.Marca();
+        Marca marca = marcaDao.findAll().stream().findFirst().orElseGet(() -> {
+            Marca m = new Marca();
             m.setNombre("Demo Brand");
             return marcaDao.save(m);
         });
 
-        crearItemMenu("Margherita",     true, marca, tomate, queso);
-        crearItemMenu("Pizza Hawaina",  true, marca, harina, queso);
-        crearItemMenu("Sushi Salmón",   true, marca, salmon, arroz);
-        crearItemMenu("Ensalada César", true, marca, tomate);
-        crearItemMenu("Arroz Chaufa",   true, marca, arroz);
+        // Crear platos con cantidades requeridas reales (no 1.0 fijo)
+        // Esto permite que el bloqueo funcione correctamente al reducir stock
+        for (int i = 0; i + 1 < insumos.size() && i < 8; i += 2) {
+            Insumo ins1 = insumos.get(i);
+            Insumo ins2 = insumos.get(i + 1);
+
+            // Requerir el 40% del stock actual como cantidad por porcion
+            double req1 = Math.max(0.5, Math.round(ins1.getCantidad() * 0.4 * 10.0) / 10.0);
+            double req2 = Math.max(0.5, Math.round(ins2.getCantidad() * 0.4 * 10.0) / 10.0);
+
+            crearPlato("Plato " + (char)('A' + i / 2), marca,
+                    new double[]{req1, req2}, ins1, ins2);
+        }
     }
 
-    private Insumo crearInsumo(String nombre, double cantidad, double stockMinimo, String unidad) {
-        Insumo i = new Insumo();
-        i.setNombre(nombre);
-        i.setCantidad(cantidad);
-        i.setStockMinimo(stockMinimo);
-        i.setUnidad(unidad);
-        return insumoDao.save(i);
-    }
-
-    private void crearItemMenu(String nombre, boolean activo, model.Marca marca, Insumo... insumos) {
+    private void crearPlato(String nombre, Marca marca, double[] cantidades, Insumo... insumos) {
         ItemMenu item = new ItemMenu();
         item.setNombre(nombre);
-        item.setActivo(activo);
+        item.setActivo(true);
         item.setMarca(marca);
         ItemMenu saved = itemMenuDao.save(item);
 
-        for (Insumo insumo : insumos) {
-            model.DetalleInsumoMenu d = new model.DetalleInsumoMenu();
-            d.setInsumo(insumo);
+        for (int i = 0; i < insumos.length; i++) {
+            DetalleInsumoMenu d = new DetalleInsumoMenu();
+            d.setInsumo(insumos[i]);
             d.setItemMenu(saved);
-            d.setCantidadRequerida(1.0);
+            d.setCantidadRequerida(cantidades[i]);
             saved.getInsumosRequeridos().add(d);
         }
         itemMenuDao.update(saved);
-    }
-
-    // ── DTO de resultado ──────────────────────────────────────────────────────
-    public static class ResultadoBloqueo {
-        private final List<Insumo>   insumosCriticos;
-        private final List<ItemMenu> platosAfectados;
-        private final List<ItemMenu> platosBloqueados;
-
-        public ResultadoBloqueo(List<Insumo> insumosCriticos,
-                                List<ItemMenu> platosAfectados,
-                                List<ItemMenu> platosBloqueados) {
-            this.insumosCriticos  = insumosCriticos;
-            this.platosAfectados  = platosAfectados;
-            this.platosBloqueados = platosBloqueados;
-        }
-
-        public List<Insumo>   getInsumosCriticos()  { return insumosCriticos;  }
-        public List<ItemMenu> getPlatosAfectados()  { return platosAfectados;  }
-        public List<ItemMenu> getPlatosBloqueados() { return platosBloqueados; }
-        public boolean        hayAlertaUrgente()    { return !platosBloqueados.isEmpty(); }
     }
 }
