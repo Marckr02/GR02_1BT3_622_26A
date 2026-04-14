@@ -1,5 +1,5 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="java.util.List, model.Pedido, model.EstadoPedido, view.PedidoViewHelper" %>
+<%@ page import="java.util.List, model.Pedido, model.EstadoPedido" %>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -102,10 +102,10 @@
             <h3>RECIBIDO <span class="col-count">(<%= recibidos.size() %>)</span></h3>
             <% if (recibidos.isEmpty()) { %><div class="empty-col">Sin pedidos</div><% } %>
             <% for (Pedido p : recibidos) { %>
-            <div class="kanban-card <%= PedidoViewHelper.getPrioridadCss(p) %>">
+            <div class="kanban-card <%= p.getPrioridadCss() %>">
                 <div class="card-header">
                     <span class="card-id">P-<%= p.getId() %></span>
-                    <span class="badge prioridad-<%= PedidoViewHelper.getPrioridadCss(p).replace("prioridad-","") %>"><%= PedidoViewHelper.getPrioridadLabel(p) %></span>
+                    <span class="badge prioridad-<%= p.getPrioridadCss().replace("prioridad-","") %>"><%= p.getPrioridadLabel() %></span>
                 </div>
                 <div class="card-body">
                     <p><strong><%= p.getNombreCliente() %></strong></p>
@@ -125,10 +125,10 @@
             <h3>EN PREPARACION <span class="col-count">(<%= enPrep.size() %>)</span></h3>
             <% if (enPrep.isEmpty()) { %><div class="empty-col">Sin pedidos</div><% } %>
             <% for (Pedido p : enPrep) { %>
-            <div class="kanban-card <%= PedidoViewHelper.getPrioridadCss(p) %>">
+            <div class="kanban-card <%= p.getPrioridadCss() %>">
                 <div class="card-header">
                     <span class="card-id">P-<%= p.getId() %></span>
-                    <span class="badge prioridad-<%= PedidoViewHelper.getPrioridadCss(p).replace("prioridad-","") %>"><%= PedidoViewHelper.getPrioridadLabel(p) %></span>
+                    <span class="badge prioridad-<%= p.getPrioridadCss().replace("prioridad-","") %>"><%= p.getPrioridadLabel() %></span>
                 </div>
                 <div class="card-body">
                     <p><strong><%= p.getNombreCliente() %></strong></p>
@@ -148,10 +148,10 @@
             <h3>LISTO <span class="col-count">(<%= listos.size() %>)</span></h3>
             <% if (listos.isEmpty()) { %><div class="empty-col">Sin pedidos</div><% } %>
             <% for (Pedido p : listos) { %>
-            <div class="kanban-card <%= PedidoViewHelper.getPrioridadCss(p) %>">
+            <div class="kanban-card <%= p.getPrioridadCss() %>">
                 <div class="card-header">
                     <span class="card-id">P-<%= p.getId() %></span>
-                    <span class="badge prioridad-<%= PedidoViewHelper.getPrioridadCss(p).replace("prioridad-","") %>"><%= PedidoViewHelper.getPrioridadLabel(p) %></span>
+                    <span class="badge prioridad-<%= p.getPrioridadCss().replace("prioridad-","") %>"><%= p.getPrioridadLabel() %></span>
                 </div>
                 <div class="card-body">
                     <p><strong><%= p.getNombreCliente() %></strong></p>
@@ -171,10 +171,10 @@
             <h3>ENTREGADO <span class="col-count">(<%= entregados.size() %>)</span></h3>
             <% if (entregados.isEmpty()) { %><div class="empty-col">Sin pedidos</div><% } %>
             <% for (Pedido p : entregados) { %>
-            <div class="kanban-card <%= PedidoViewHelper.getPrioridadCss(p) %>">
+            <div class="kanban-card <%= p.getPrioridadCss() %>">
                 <div class="card-header">
                     <span class="card-id">P-<%= p.getId() %></span>
-                    <span class="badge prioridad-<%= PedidoViewHelper.getPrioridadCss(p).replace("prioridad-","") %>"><%= PedidoViewHelper.getPrioridadLabel(p) %></span>
+                    <span class="badge prioridad-<%= p.getPrioridadCss().replace("prioridad-","") %>"><%= p.getPrioridadLabel() %></span>
                 </div>
                 <div class="card-body">
                     <p><strong><%= p.getNombreCliente() %></strong></p>
