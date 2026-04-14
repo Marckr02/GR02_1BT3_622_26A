@@ -73,5 +73,29 @@ public class ItemMenu {
     public void setInsumosRequeridos(List<DetalleInsumoMenu> insumosRequeridos) {
         this.insumosRequeridos = insumosRequeridos;
     }
-}
 
+    public boolean puedePrepararse() {
+        if (insumosRequeridos == null || insumosRequeridos.isEmpty()) return true;
+
+        for (DetalleInsumoMenu detalle : insumosRequeridos) {
+            Insumo insumo = detalle.getInsumo();
+            if (insumo.getCantidad() < detalle.getCantidadRequerida()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public List<String> obtenerMotivosBloqueo() {
+        List<String> motivos = new ArrayList<>();
+        for (DetalleInsumoMenu detalle : insumosRequeridos) {
+            Insumo insumo = detalle.getInsumo();
+            if (insumo.getCantidad() < detalle.getCantidadRequerida()) {
+                motivos.add(insumo.getNombre()
+                        + ": disponible " + insumo.getCantidad() + " " + insumo.getUnidad()
+                        + ", requerido " + detalle.getCantidadRequerida() + " " + insumo.getUnidad());
+            }
+        }
+        return motivos;
+    }
+}

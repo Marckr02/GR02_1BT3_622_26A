@@ -156,23 +156,15 @@ public class InsumoService {
 
         // ── Paso 3-4: Construir detalles y sumar stock (Gestor de Inventario) ──
         for (int i = 0; i < insumoIds.length; i++) {
-            Insumo insumo = insumoDao.findById(insumoIds[i])
-                .orElseThrow(() -> new IllegalArgumentException("Insumo no encontrado."));
-
-            DetalleOrden detalle = new DetalleOrden();
-            detalle.setOrdenDeCompra(orden);
-            detalle.setInsumo(insumo);
-            detalle.setCantidadPedida(cantidadesPedidas[i]);
-            detalle.setCantidadRecibida(cantidadesRecibidas[i]);
-            detalle.setPrecioUnitario(preciosUnitarios[i]);
-            orden.getDetalles().add(detalle);
-
-            if (detalle.hayDiscrepancia()) {
+            // Delegamos la lógica interna al nuevo método extraído
+            if (crearDetalleYActualizarStock(
+                    orden,
+                    insumoIds[i],
+                    cantidadesPedidas[i],
+                    cantidadesRecibidas[i],
+                    preciosUnitarios[i])) {
                 hayDiscrepanciaGlobal = true;
             }
-
-            // Sumar al inventario centralizado con la cantidad RECIBIDA físicamente
-            sumarStock(insumo, cantidadesRecibidas[i]);
         }
 
         // ── Paso 5: Detectar discrepancias (extend del CU3) ───────────────────
@@ -184,6 +176,33 @@ public class InsumoService {
         ordenDao.save(orden);
 
         return orden; // El comprobante lo renderiza la JSP usando este objeto
+    }
+
+    /**
+     * Método extraído para encapsular la creación del detalle y la actualización de stock.
+     * Aplica el principio de responsabilidad única.
+     */
+    private boolean crearDetalleYActualizarStock(OrdenDeCompra orden,
+                                                 Long insumoId,
+                                                 Double cantidadPedida,
+                                                 Double cantidadRecibida,
+                                                 Double precioUnitario) {
+        Insumo insumo = insumoDao.findById(insumoId)
+                .orElseThrow(() -> new IllegalArgumentException("Insumo no encontrado."));
+
+        DetalleOrden detalle = new DetalleOrden();
+        detalle.setOrdenDeCompra(orden);
+        detalle.setInsumo(insumo);
+        detalle.setCantidadPedida(cantidadPedida);
+        detalle.setCantidadRecibida(cantidadRecibida);
+        detalle.setPrecioUnitario(precioUnitario);
+        orden.getDetalles().add(detalle);
+
+        // Sumar al inventario centralizado con la cantidad RECIBIDA físicamente
+        sumarStock(insumo, cantidadRecibida);
+
+        // Retorna si hubo discrepancia para que el llamador actualice el estado global
+        return detalle.hayDiscrepancia();
     }
 
     /**

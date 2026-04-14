@@ -1,5 +1,5 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="java.util.List, model.Pedido, model.Marca" %>
+<%@ page import="java.util.List, model.Pedido, model.Marca, view.PedidoViewHelper" %>
 <!DOCTYPE html>
 <html lang="es">
 <head>

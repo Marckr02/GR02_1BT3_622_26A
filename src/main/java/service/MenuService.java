@@ -56,7 +56,7 @@ public class MenuService {
         List<ItemMenu> todosLosPlatos = itemMenuDao.findAllWithInsumos();
 
         for (ItemMenu plato : todosLosPlatos) {
-            boolean puedePrepararseAhora = puedePrepararse(plato);
+            boolean puedePrepararseAhora = plato.puedePrepararse();
 
             if (!puedePrepararseAhora && plato.isActivo()) {
                 // Bloquear: le falta al menos un insumo
@@ -73,23 +73,13 @@ public class MenuService {
     }
 
     /**
-     * Determina si un plato puede prepararse comparando el stock actual de cada
-     * insumo requerido contra la cantidadRequerida definida en DetalleInsumoMenu.
+     * Para cada plato bloqueado, devuelve cuales insumos son la causa.
+     * Usado en la vista para mostrar el motivo de cada bloqueo.
      *
-     * Un plato NO puede prepararse si cualquier insumo tiene:
-     *   insumo.getCantidad() < detalle.getCantidadRequerida()
+     * Delegado a ItemMenu.obtenerMotivosBloqueo() (Move Method Refactoring).
      */
-    public boolean puedePrepararse(ItemMenu plato) {
-        List<DetalleInsumoMenu> requeridos = plato.getInsumosRequeridos();
-        if (requeridos == null || requeridos.isEmpty()) return true;
-
-        for (DetalleInsumoMenu detalle : requeridos) {
-            Insumo insumo = detalle.getInsumo();
-            if (insumo.getCantidad() < detalle.getCantidadRequerida()) {
-                return false;
-            }
-        }
-        return true;
+    public List<String> obtenerMotivosBloqueo(ItemMenu plato) {
+        return plato.obtenerMotivosBloqueo();
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -107,23 +97,6 @@ public class MenuService {
         return insumoDao.findAll().stream()
                 .filter(i -> i.getCantidad() <= i.getStockMinimo())
                 .collect(Collectors.toList());
-    }
-
-    /**
-     * Para cada plato bloqueado, devuelve cuales insumos son la causa.
-     * Usado en la vista para mostrar el motivo de cada bloqueo.
-     */
-    public List<String> obtenerMotivosBloqueo(ItemMenu plato) {
-        List<String> motivos = new ArrayList<>();
-        for (DetalleInsumoMenu detalle : plato.getInsumosRequeridos()) {
-            Insumo insumo = detalle.getInsumo();
-            if (insumo.getCantidad() < detalle.getCantidadRequerida()) {
-                motivos.add(insumo.getNombre()
-                        + ": disponible " + insumo.getCantidad() + " " + insumo.getUnidad()
-                        + ", requerido " + detalle.getCantidadRequerida() + " " + insumo.getUnidad());
-            }
-        }
-        return motivos;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
