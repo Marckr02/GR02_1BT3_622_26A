@@ -1,6 +1,8 @@
 package model;
 
 import java.time.LocalDateTime;
+import java.util.Map;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -83,21 +85,16 @@ public class Pedido {
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    /** Etiqueta legible de la prioridad para mostrarse en la vista. */
-    public String getPrioridadLabel() {
-        return switch (prioridad) {
-            case 1 -> "Alta";
-            case 2 -> "Media";
-            default -> "Baja";
-        };
+    private static final Map<Integer, String[]> INFO_PRIORIDAD = Map.of(
+        1, new String[]{"Alta",  "prioridad-alta"},
+        2, new String[]{"Media", "prioridad-media"},
+        3, new String[]{"Baja",  "prioridad-baja"}
+    );
+    public String getPrioridadLabel(){
+        return INFO_PRIORIDAD.getOrDefault(prioridad, INFO_PRIORIDAD.get(3))[0];
     }
 
-    /** Clase CSS asociada a la prioridad (para colorear la tarjeta). */
-    public String getPrioridadCss() {
-        return switch (prioridad) {
-            case 1 -> "prioridad-alta";
-            case 2 -> "prioridad-media";
-            default -> "prioridad-baja";
-        };
+    public String getPrioridadCss(){
+        return INFO_PRIORIDAD.getOrDefault(prioridad, INFO_PRIORIDAD.get(3))[1];
     }
 }
