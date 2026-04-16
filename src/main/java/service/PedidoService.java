@@ -136,25 +136,18 @@ public class PedidoService {
         }
 
         Pedido pedido = pedidoOpt.get();
-        EstadoPedido estadoActual = pedido.getEstado();
-
-        EstadoPedido siguienteEstado;
-        switch (estadoActual) {
-            case RECIBIDO:
-                siguienteEstado = EstadoPedido.EN_PREP;
-                break;
-            case EN_PREP:
-                siguienteEstado = EstadoPedido.LISTO;
-                break;
-            case LISTO:
-                siguienteEstado = EstadoPedido.ENTREGADO;
-                break;
-            default:
-                throw new IllegalArgumentException("El pedido P-" + pedidoId + " ya está en estado ENTREGADO.");
-        }
-
-        pedido.setEstado(siguienteEstado);
+        pedido.setEstado(obtenerSiguienteEstado(pedido.getEstado(), pedidoId));
         pedidoDao.update(pedido);
+    }
+
+    private EstadoPedido obtenerSiguienteEstado(EstadoPedido estadoActual, Long pedidoId) {
+        return switch (estadoActual) {
+            case RECIBIDO -> EstadoPedido.EN_PREP;
+            case EN_PREP -> EstadoPedido.LISTO;
+            case LISTO -> EstadoPedido.ENTREGADO;
+            default -> throw new IllegalArgumentException(
+                    "El pedido P-" + pedidoId + " ya está en estado ENTREGADO.");
+        };
     }
 
     // ─────────────────────────────────────────────────────────────────────────
