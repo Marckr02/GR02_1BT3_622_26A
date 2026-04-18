@@ -36,6 +36,12 @@ public class PedidoService {
         inicializarMarcasBase();
     }
 
+    // NUEVO CONSTRUCTOR PARA TESTS (Funcionalidad: cancelar pedido)
+    public PedidoService(PedidoDao pedidoDao, MarcaDao marcaDao) {
+        this.pedidoDao = pedidoDao;
+        this.marcaDao = marcaDao;
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // CU1 – Recibir pedido de plataforma externa
     // ─────────────────────────────────────────────────────────────────────────
@@ -148,6 +154,32 @@ public class PedidoService {
             default -> throw new IllegalArgumentException(
                     "El pedido P-" + pedidoId + " ya está en estado ENTREGADO.");
         };
+    }
+
+    // METODO TEST PARA CANCELAR PEDIDO
+    /**
+     * Cancela un pedido sólo si aún está en estado RECIBIDO.
+     * Un pedido en preparación o ya listo no puede cancelarse.
+     */
+    public void cancelarPedido(Long pedidoId) {
+        Pedido pedido = buscarPedido(pedidoId);
+        validarCancelable(pedido);
+        pedido.setEstado(EstadoPedido.CANCELADO);
+        pedidoDao.update(pedido);
+    }
+
+    private Pedido buscarPedido(Long pedidoId) {
+        return pedidoDao.findById(pedidoId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Pedido id= " + pedidoId + " no encontrado."));
+    }
+
+    private void validarCancelable(Pedido pedido) {
+        if (pedido.getEstado() != EstadoPedido.RECIBIDO) {
+            throw new IllegalStateException(
+                    "No se puede cancelar en estado "
+                            + pedido.getEstado());
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
