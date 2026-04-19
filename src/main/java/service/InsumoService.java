@@ -279,4 +279,7 @@ public class InsumoService {
             }
         }
     }
+    public boolean tieneStock(Insumo insumo) {
+        return insumo != null && insumo.getCantidad() > 0;
+    }
 }
