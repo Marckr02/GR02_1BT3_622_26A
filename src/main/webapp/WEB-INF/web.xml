@@ -7,6 +7,24 @@
     <display-name>Dark Kitchen Base</display-name>
 
     <servlet>
+        <servlet-name>LoginServlet</servlet-name>
+        <servlet-class>servlet.LoginServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>LoginServlet</servlet-name>
+        <url-pattern>/login</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>DashboardServlet</servlet-name>
+        <servlet-class>servlet.DashboardServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DashboardServlet</servlet-name>
+        <url-pattern>/dashboard</url-pattern>
+    </servlet-mapping>
+    
+    <servlet>
         <servlet-name>PedidoRecibirServlet</servlet-name>
         <servlet-class>servlet.PedidoRecibirServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
