@@ -1,10 +1,13 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page import="model.Usuario, model.Rol" %>
 <%
     if (session.getAttribute("usuarioActivo") == null) {
         response.sendRedirect(request.getContextPath() + "/login");
         return;
     }
+    Usuario usuarioActivo = (Usuario) session.getAttribute("usuarioActivo");
+    Rol rolActivo = usuarioActivo.getRol();
 %>
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -18,10 +21,18 @@
 <nav class="navbar">
     <a class="navbar-brand" href="${pageContext.request.contextPath}/index.jsp">Dark Kitchen</a>
     <div class="navbar-links">
+        <% if (rolActivo == Rol.COCINERO) { %>
         <a href="${pageContext.request.contextPath}/pedidos/recibir">CU1 · Pedidos</a>
         <a href="${pageContext.request.contextPath}/pedidos/kanban">CU2 · Kanban</a>
+        <% } %>
+        <% if (rolActivo == Rol.ADMIN_BODEGA) { %>
         <a href="${pageContext.request.contextPath}/insumos/entrada">CU3 · Insumos</a>
         <a href="${pageContext.request.contextPath}/menu/bloqueo">CU4 · Bloqueo</a>
+        <% } %>
+        <a href="${pageContext.request.contextPath}/login?logout=1"
+           onclick="fetch('${pageContext.request.contextPath}/logout', {method:'POST'}).then(()=>window.location='${pageContext.request.contextPath}/login')">
+            Cerrar sesión
+        </a>
     </div>
 </nav>
 
@@ -29,10 +40,12 @@
 
     <div class="page-header">
         <h2>Sistema de Gestión para Dark Kitchens Colaborativas</h2>
-        <p>Plataforma de gestión de pedidos e inventario · GR2SW — Escuela Politécnica Nacional</p>
+        <p>Bienvenido, <strong><%= usuarioActivo.getUsername() %></strong>
+            — Rol: <strong><%= rolActivo.name() %></strong></p>
     </div>
 
     <div class="stat-grid">
+        <% if (rolActivo == Rol.COCINERO) { %>
         <a href="${pageContext.request.contextPath}/pedidos/recibir" class="stat-card">
             <div class="cu-label">Incremento 1 · CU1</div>
             <div class="cu-title">Recibir Pedidos</div>
@@ -43,6 +56,8 @@
             <div class="cu-title">Tablero Kanban</div>
             <div class="cu-desc">Actualización del estado de preparación a través del flujo de producción</div>
         </a>
+        <% } %>
+        <% if (rolActivo == Rol.ADMIN_BODEGA) { %>
         <a href="${pageContext.request.contextPath}/insumos/entrada" class="stat-card">
             <div class="cu-label">Incremento 2 · CU3</div>
             <div class="cu-title">Entrada de Insumos</div>
@@ -53,6 +68,7 @@
             <div class="cu-title">Bloqueo de Menú</div>
             <div class="cu-desc">Desactivación automática de platos cuando los insumos alcanzan nivel crítico</div>
         </a>
+        <% } %>
     </div>
 
     <div style="padding: 1rem 1.25rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); margin-top: 1rem;">
