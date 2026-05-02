@@ -24,6 +24,9 @@
         <!-- Incremento 3 – HU8: Sistema de autenticación (TAREA 1) -->
         <class>model.Usuario</class>
 
+        <!-- Incremento 4 – Alertas de Stock (Tarea 1) -->
+        <class>model.AlertaStock</class>
+        <class>model.NivelAlerta</class>
 
         <properties>
             <property name="jakarta.persistence.jdbc.driver"   value="org.h2.Driver"/>
@@ -33,7 +36,7 @@
             <property name="jakarta.persistence.jdbc.password" value=""/>
 
             <property name="hibernate.dialect"        value="org.hibernate.dialect.H2Dialect"/>
-            <!-- "update" crea la nueva tabla "usuario" sin borrar las existentes -->
+            <!-- "update" crea la nueva tabla "alerta_stock" sin borrar las existentes -->
             <property name="hibernate.hbm2ddl.auto"   value="update"/>
             <property name="hibernate.show_sql"        value="true"/>
             <property name="hibernate.format_sql"      value="true"/>
