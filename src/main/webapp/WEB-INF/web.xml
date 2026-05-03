@@ -6,6 +6,10 @@
 
     <display-name>Dark Kitchen Base</display-name>
 
+    <!-- ══════════════════════════════════════════════════════════════════════
+         FILTRO DE AUTENTICACIÓN Y CONTROL DE ACCESO POR ROL
+         HU: Restringir el acceso a vistas según el rol del usuario autenticado
+         ══════════════════════════════════════════════════════════════════════ -->
     <filter>
         <filter-name>AuthFilter</filter-name>
         <filter-class>servlet.AuthFilter</filter-class>
@@ -26,7 +30,15 @@
         <filter-name>AuthFilter</filter-name>
         <url-pattern>/dashboard</url-pattern>
     </filter-mapping>
+    <!-- Tarea 4: proteger el historial de alertas (requiere sesión activa) -->
+    <filter-mapping>
+        <filter-name>AuthFilter</filter-name>
+        <url-pattern>/alertas/*</url-pattern>
+    </filter-mapping>
 
+    <!-- ══════════════════════════════════════════════════════════════════════
+         SERVLETS EXISTENTES
+         ══════════════════════════════════════════════════════════════════════ -->
     <servlet>
         <servlet-name>LoginServlet</servlet-name>
         <servlet-class>servlet.LoginServlet</servlet-class>
@@ -92,6 +104,19 @@
     <servlet-mapping>
         <servlet-name>MenuBloqueoServlet</servlet-name>
         <url-pattern>/menu/bloqueo</url-pattern>
+    </servlet-mapping>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         TAREA 4 – Historial de Alertas de Stock
+         ══════════════════════════════════════════════════════════════════════ -->
+    <servlet>
+        <servlet-name>AlertaHistorialServlet</servlet-name>
+        <servlet-class>servlet.AlertaHistorialServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AlertaHistorialServlet</servlet-name>
+        <url-pattern>/alertas/historial</url-pattern>
     </servlet-mapping>
 
     <welcome-file-list>

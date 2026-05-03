@@ -42,9 +42,9 @@ public class ServiceFactory {
         return new PedidoService(createPedidoDao(), createMarcaDao());
     }
 
-    public static InsumoService createInsumoService() {
-        return new InsumoService(createInsumoDao(), createOrdenDeCompraDao());
-    }
+//    public static InsumoService createInsumoService() {
+//        return new InsumoService(createInsumoDao(), createOrdenDeCompraDao());
+//    }
 
     public static MenuService createMenuService() {
         return new MenuService(createInsumoDao(), createItemMenuDao(), createMarcaDao());
