@@ -31,8 +31,7 @@ public class PedidoService {
     private final MarcaDao marcaDao;
 
     public PedidoService() {
-        this.pedidoDao = new PedidoDaoHibernate();
-        this.marcaDao = new MarcaDaoHibernate();
+        this(ServiceFactory.createPedidoDao(), ServiceFactory.createMarcaDao());
         inicializarMarcasBase();
     }
 

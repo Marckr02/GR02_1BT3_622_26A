@@ -40,8 +40,7 @@ public class LoginServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        HttpSession session = req.getSession(false);
-        if (session != null && session.getAttribute("usuarioActivo") != null) {
+        if (SessionUtil.haySesionActiva(req)) {
             resp.sendRedirect(req.getContextPath() + "/dashboard");
             return;
         }

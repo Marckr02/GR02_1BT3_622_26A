@@ -41,8 +41,7 @@ public class UsuarioService {
     }
 
     public UsuarioService() {
-        this.usuarioDao = new UsuarioDaoHibernate();
-        inicializarUsuariosBase();
+        this(ServiceFactory.createUsuarioDao());
     }
 
     // ── FASE REFACTOR: autenticar() limpio como orquestador ───────────────
