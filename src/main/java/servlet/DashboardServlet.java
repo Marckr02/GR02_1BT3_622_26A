@@ -27,14 +27,12 @@ public class DashboardServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        HttpSession session = req.getSession(false);
-
-        if (session == null || session.getAttribute("usuarioActivo") == null) {
+        if (!SessionUtil.haySesionActiva(req)) {
             resp.sendRedirect(req.getContextPath() + "/login");
             return;
         }
 
-        Usuario usuario = (Usuario) session.getAttribute("usuarioActivo");
+        Usuario usuario = SessionUtil.getUsuarioActivo(req);
 
         // Pasa el rol a la vista para que index.jsp renderice solo lo que corresponde
         req.setAttribute("usuario", usuario);

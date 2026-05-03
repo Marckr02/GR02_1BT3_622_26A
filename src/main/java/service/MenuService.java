@@ -1,11 +1,8 @@
 package service;
 
 import dao.InsumoDao;
-import dao.InsumoDaoHibernate;
 import dao.ItemMenuDao;
-import dao.ItemMenuDaoHibernate;
 import dao.MarcaDao;
-import dao.MarcaDaoHibernate;
 import model.DetalleInsumoMenu;
 import model.Insumo;
 import model.ItemMenu;
@@ -33,10 +30,14 @@ public class MenuService {
     private final ItemMenuDao itemMenuDao;
     private final MarcaDao    marcaDao;
 
+    public MenuService(InsumoDao insumoDao, ItemMenuDao itemMenuDao, MarcaDao marcaDao) {
+        this.insumoDao = insumoDao;
+        this.itemMenuDao = itemMenuDao;
+        this.marcaDao = marcaDao;
+    }
+
     public MenuService() {
-        this.insumoDao   = new InsumoDaoHibernate();
-        this.itemMenuDao = new ItemMenuDaoHibernate();
-        this.marcaDao    = new MarcaDaoHibernate();
+        this(ServiceFactory.createInsumoDao(), ServiceFactory.createItemMenuDao(), ServiceFactory.createMarcaDao());
         inicializarPlatosDemo();
     }
 

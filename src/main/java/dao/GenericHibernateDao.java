@@ -7,7 +7,8 @@ import java.util.Optional;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
-public abstract class GenericHibernateDao<T, ID extends Serializable> implements GenericDao<T, ID> {
+public abstract class GenericHibernateDao<T, ID extends Serializable>
+        implements GenericDao<T, ID> {
 
     private final Class<T> entityClass;
 
@@ -15,46 +16,53 @@ public abstract class GenericHibernateDao<T, ID extends Serializable> implements
         this.entityClass = entityClass;
     }
 
-    @Override
-    public T save(T entity) {
+    /**
+     * Template Method: ejecuta operaciones transaccionales
+     */
+    protected <R> R executeInTransaction(TransactionOperation<R> operation) {
         Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             transaction = session.beginTransaction();
-            session.persist(entity);
+            R result = operation.execute(session);
             transaction.commit();
-            return entity;
+            return result;
         } catch (Exception ex) {
             rollback(transaction);
-            throw ex;
+            throw new RuntimeException("Error en operación transaccional", ex);
         }
+    }
+
+    /**
+     * Interfaz funcional para operaciones transaccionales
+     */
+    @FunctionalInterface
+    protected interface TransactionOperation<R> {
+        R execute(Session session) throws Exception;
+    }
+
+    @Override
+    public T save(T entity) {
+        return executeInTransaction(session -> {
+            session.persist(entity);
+            return entity;
+        });
     }
 
     @Override
     public T update(T entity) {
-        Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            transaction = session.beginTransaction();
-            T managedEntity = session.merge(entity);
-            transaction.commit();
-            return managedEntity;
-        } catch (Exception ex) {
-            rollback(transaction);
-            throw ex;
-        }
+        return executeInTransaction(session -> {
+            return session.merge(entity);
+        });
     }
 
     @Override
     public void delete(T entity) {
-        Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            transaction = session.beginTransaction();
-            T managedEntity = session.contains(entity) ? entity : session.merge(entity);
+        executeInTransaction(session -> {
+            T managedEntity = session.contains(entity) ?
+                    entity : session.merge(entity);
             session.remove(managedEntity);
-            transaction.commit();
-        } catch (Exception ex) {
-            rollback(transaction);
-            throw ex;
-        }
+            return null;
+        });
     }
 
     @Override

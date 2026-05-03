@@ -1,8 +1,8 @@
 package service;
 
 import config.HibernateUtil;
-import dao.InsumoDaoHibernate;
-import dao.OrdenDeCompraDaoHibernate;
+import dao.InsumoDao;
+import dao.OrdenDeCompraDao;
 import model.DetalleOrden;
 import model.EstadoOrden;
 import model.Insumo;
@@ -43,15 +43,19 @@ import service.MenuService;
  */
 public class InsumoService {
 
-    private final InsumoDaoHibernate insumoDao;
-    private final OrdenDeCompraDaoHibernate ordenDao;
+    private final InsumoDao insumoDao;
+    private final OrdenDeCompraDao ordenDao;
     private final MenuService menuService;
 
+    public InsumoService(InsumoDao insumoDao, OrdenDeCompraDao ordenDao) {
+        this.insumoDao = insumoDao;
+        this.ordenDao = ordenDao;
+        this.menuService = ServiceFactory.createMenuService();
+    }
+
     public InsumoService() {
-        this.insumoDao   = new InsumoDaoHibernate();
-        this.ordenDao    = new OrdenDeCompraDaoHibernate();
+        this(ServiceFactory.createInsumoDao(), ServiceFactory.createOrdenDeCompraDao());
         inicializarInsumosBase();
-        this.menuService = new MenuService();
         // Sincronizar estado inicial del menu con el stock actual
         menuService.sincronizarDisponibilidadMenu();
     }
