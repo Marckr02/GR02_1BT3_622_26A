@@ -10,31 +10,33 @@
          FILTRO DE AUTENTICACIÓN Y CONTROL DE ACCESO POR ROL
          HU: Restringir el acceso a vistas según el rol del usuario autenticado
          ══════════════════════════════════════════════════════════════════════ -->
-    <filter>
-        <filter-name>AuthFilter</filter-name>
-        <filter-class>servlet.AuthFilter</filter-class>
-    </filter>
-    <filter-mapping>
-        <filter-name>AuthFilter</filter-name>
-        <url-pattern>/pedidos/*</url-pattern>
-    </filter-mapping>
-    <filter-mapping>
-        <filter-name>AuthFilter</filter-name>
-        <url-pattern>/insumos/*</url-pattern>
-    </filter-mapping>
-    <filter-mapping>
-        <filter-name>AuthFilter</filter-name>
-        <url-pattern>/menu/*</url-pattern>
-    </filter-mapping>
-    <filter-mapping>
-        <filter-name>AuthFilter</filter-name>
-        <url-pattern>/dashboard</url-pattern>
-    </filter-mapping>
-    <!-- Tarea 4: proteger el historial de alertas (requiere sesión activa) -->
+        <filter>
+            <filter-name>AuthFilter</filter-name>
+            <filter-class>servlet.AuthFilter</filter-class>
+        </filter>
+        <filter-mapping>
+            <filter-name>AuthFilter</filter-name>
+            <url-pattern>/pedidos/*</url-pattern>
+        </filter-mapping>
+        <filter-mapping>
+            <filter-name>AuthFilter</filter-name>
+            <url-pattern>/insumos/*</url-pattern>
+        </filter-mapping>
+        <filter-mapping>
+            <filter-name>AuthFilter</filter-name>
+            <url-pattern>/menu/*</url-pattern>
+        </filter-mapping>
+        <filter-mapping>
+            <filter-name>AuthFilter</filter-name>
+            <url-pattern>/dashboard</url-pattern>
+        </filter-mapping>
+
+
+        <!-- Tarea 4: proteger el historial de alertas (requiere sesión activa)  -->
     <filter-mapping>
         <filter-name>AuthFilter</filter-name>
         <url-pattern>/alertas/*</url-pattern>
-    </filter-mapping>
+    </filter-mapping>  
 
     <!-- ══════════════════════════════════════════════════════════════════════
          SERVLETS EXISTENTES

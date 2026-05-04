@@ -16,30 +16,31 @@
         <class>model.ItemMenu</class>
         <class>model.DetalleInsumoMenu</class>
 
-        <!-- Incremento 2 – CU3 -->
+        <!-- Incremento 2 - CU3 -->
         <class>model.OrdenDeCompra</class>
         <class>model.DetalleOrden</class>
         <class>model.EstadoOrden</class>
 
-        <!-- Incremento 3 – HU8: Sistema de autenticación (TAREA 1) -->
+        <!-- Incremento 3 - HU8: Sistema de autenticación (TAREA 1) -->
         <class>model.Usuario</class>
 
-        <!-- Incremento 4 – Alertas de Stock (Tarea 1) -->
+        <!-- Incremento 4 - Alertas de Stock (Tarea 1) -->
         <class>model.AlertaStock</class>
         <class>model.NivelAlerta</class>
 
         <properties>
             <property name="jakarta.persistence.jdbc.driver"   value="org.h2.Driver"/>
+            <!-- Base de datos en memoria: funciona igual en local y en Docker -->
             <property name="jakarta.persistence.jdbc.url"
-                      value="jdbc:h2:~/darkkitchen-db;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE"/>
+                      value="jdbc:h2:mem:darkkitchen;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE"/>
             <property name="jakarta.persistence.jdbc.user"     value="sa"/>
             <property name="jakarta.persistence.jdbc.password" value=""/>
 
-            <property name="hibernate.dialect"        value="org.hibernate.dialect.H2Dialect"/>
-            <!-- "update" crea la nueva tabla "alerta_stock" sin borrar las existentes -->
-            <property name="hibernate.hbm2ddl.auto"   value="update"/>
-            <property name="hibernate.show_sql"        value="true"/>
-            <property name="hibernate.format_sql"      value="true"/>
+            <property name="hibernate.dialect"      value="org.hibernate.dialect.H2Dialect"/>
+            <!-- create-drop: crea las tablas al arrancar y las borra al cerrar -->
+            <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
+            <property name="hibernate.show_sql"     value="true"/>
+            <property name="hibernate.format_sql"   value="true"/>
         </properties>
     </persistence-unit>
 </persistence>

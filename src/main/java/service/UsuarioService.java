@@ -83,7 +83,17 @@ public class UsuarioService {
 
     // ── Datos semilla ─────────────────────────────────────────────────────
 
-    private void inicializarUsuariosBase() {
+    /**
+     * Inserta los usuarios base si la BD está vacía.
+     * Se llama desde LoginServlet.init() para garantizar que siempre
+     * existan credenciales válidas, incluso en Docker con H2 en memoria.
+     *
+     * Credenciales disponibles:
+     *   chef01  / pass123  → Rol: COCINERO
+     *   chef02  / pass456  → Rol: COCINERO
+     *   admin01 / admin123 → Rol: ADMIN_BODEGA
+     */
+    public void inicializarUsuariosBase() {
         if (!usuarioDao.findAll().isEmpty()) return;
 
         List<Object[]> usuarios = Arrays.asList(

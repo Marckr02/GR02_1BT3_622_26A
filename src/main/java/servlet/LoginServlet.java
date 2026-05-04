@@ -30,6 +30,8 @@ public class LoginServlet extends HttpServlet {
     @Override
     public void init() {
         this.usuarioService = new UsuarioService();
+        // Insertar usuarios base si la BD está vacía (necesario en Docker con H2 en memoria)
+        this.usuarioService.inicializarUsuariosBase();
     }
 
     /**
