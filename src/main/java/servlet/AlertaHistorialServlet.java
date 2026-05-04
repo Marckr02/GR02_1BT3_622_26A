@@ -19,7 +19,7 @@ import java.util.List;
  *                          → pasa lista como atributo "alertas" al request
  *                          → despacha a cu-alertas.jsp
  */
-@WebServlet("/alertas/historial")
+
 public class AlertaHistorialServlet extends HttpServlet {
 
     private AlertaService alertaService;
