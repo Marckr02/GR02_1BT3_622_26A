@@ -49,4 +49,14 @@ public class ServiceFactory {
     public static MenuService createMenuService() {
         return new MenuService(createInsumoDao(), createItemMenuDao(), createMarcaDao());
     }
+
+    // ── Iteración 1 HU1: Gestión de Proveedores ───────────────────────────
+
+    public static dao.ProveedorDao createProveedorDao() {
+        return new dao.ProveedorDaoHibernate();
+    }
+
+    public static service.ProveedorService createProveedorService() {
+        return new service.ProveedorService(createProveedorDao());
+    }
 }
