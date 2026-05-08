@@ -1,5 +1,5 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="java.util.List, model.Insumo, model.OrdenDeCompra, model.DetalleOrden" %>
+<%@ page import="java.util.List, model.Insumo, model.OrdenDeCompra, model.DetalleOrden, model.Proveedor" %>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -50,7 +50,6 @@
         .comprobante h3 { font-size: 0.95rem; font-weight: 700; color: var(--green); margin-bottom: 0.75rem; }
         .comprobante p  { font-size: 0.875rem; color: var(--text); margin-bottom: 0.4rem; }
         .disc { color: var(--red); font-weight: 700; }
-        /* Modal */
         #modalReducir {
             display: none;
             position: fixed;
@@ -61,6 +60,16 @@
             z-index: 999;
         }
         #modalReducir.activo { display: flex; }
+        #modalAsociar {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+        #modalAsociar.activo { display: flex; }
         .modal-box {
             background: var(--bg);
             border: 1px solid var(--border);
@@ -121,11 +130,17 @@
     <% if ("1".equals(request.getParameter("reducidoOk"))) { %>
     <div class="msg-ok">Stock reducido correctamente.</div>
     <% } %>
+    <% if ("1".equals(request.getParameter("asociadoOk"))) { %>
+    <div class="msg-ok">Proveedor asociado correctamente al insumo.</div>
+    <% } %>
     <% if (request.getAttribute("error") != null) { %>
     <div class="msg-error"><%= request.getAttribute("error") %></div>
     <% } %>
     <% if (request.getAttribute("errorReduccion") != null) { %>
     <div class="msg-error"><%= request.getAttribute("errorReduccion") %></div>
+    <% } %>
+    <% if (request.getAttribute("errorAsociacion") != null) { %>
+    <div class="msg-error"><%= request.getAttribute("errorAsociacion") %></div>
     <% } %>
 
     <%-- Comprobante --%>
@@ -172,6 +187,7 @@
     <%-- Tabla de inventario --%>
     <%
         List<Insumo> insumos = (List<Insumo>) request.getAttribute("insumos");
+        List<Proveedor> proveedores = (List<Proveedor>) request.getAttribute("proveedores");
     %>
     <% if (insumos == null || insumos.isEmpty()) { %>
     <p style="color:var(--text-muted); font-style:italic;">No hay insumos registrados.</p>
@@ -181,24 +197,26 @@
         <thead>
             <tr>
                 <th>#</th><th>Nombre</th><th>Stock Actual</th><th>Unidad</th>
-                <th>Stock Minimo</th><th>Estado</th><th>Accion</th>
+                <th>Stock Minimo</th><th>Proveedor</th><th>Estado</th><th>Accion</th>
             </tr>
         </thead>
         <tbody>
         <% for (Insumo ins : insumos) {
-               boolean bajo = ins.getCantidad() <= ins.getStockMinimo(); %>
+               boolean bajo = ins.getCantidad() <= ins.getStockMinimo();
+               String nombreProv = ins.getProveedor() != null ? ins.getProveedor().getNombre() : "—"; %>
         <tr>
             <td style="color:var(--text-muted)"><%= ins.getId() %></td>
             <td><strong><%= ins.getNombre() %></strong></td>
             <td><%= ins.getCantidad() %></td>
             <td><%= ins.getUnidad() %></td>
             <td><%= ins.getStockMinimo() %></td>
+            <td><%= nombreProv %></td>
             <td>
                 <span class="badge <%= bajo ? "badge-critico" : "badge-ok" %>">
                     <%= bajo ? "Stock bajo" : "OK" %>
                 </span>
             </td>
-            <td>
+            <td style="display:flex;gap:0.4rem;flex-wrap:wrap;">
                 <button class="btn btn-danger" style="padding:0.3rem 0.7rem; font-size:0.78rem; margin-top:0;"
                     onclick="abrirModalReducir(
                         '<%= ins.getId() %>',
@@ -207,6 +225,10 @@
                         '<%= ins.getUnidad() %>'
                     )">
                     Reducir stock
+                </button>
+                <button class="btn btn-primary" style="padding:0.3rem 0.7rem; font-size:0.78rem; margin-top:0;"
+                    onclick="abrirModalAsociar('<%= ins.getId() %>', '<%= ins.getNombre().replace("'", "\\'") %>')">
+                    Asociar proveedor
                 </button>
             </td>
         </tr>
@@ -292,6 +314,46 @@
     <a href="${pageContext.request.contextPath}/menu/bloqueo">Ver CU4 – Bloqueo de Menu</a>
 </div>
 
+<%-- Modal asociar proveedor HU2 --%>
+<div id="modalAsociar">
+    <div class="modal-box">
+        <h3>Asociar Proveedor</h3>
+        <p style="font-size:0.875rem; color:var(--text-muted); margin-bottom:0.5rem;">
+            Insumo: <strong id="modalAsociarNombreInsumo" style="color:var(--text)"></strong>
+        </p>
+        <form method="post" action="${pageContext.request.contextPath}/insumos/entrada">
+            <input type="hidden" name="accion" value="asociar">
+            <input type="hidden" id="modalAsociarInsumoId" name="insumoId">
+            <div class="form-group" style="margin-top:1rem;">
+                <label for="selectProveedor">Proveedor</label>
+                <%
+                    if (proveedores == null || proveedores.isEmpty()) {
+                %>
+                <p style="font-size:0.85rem;color:var(--red,#dc2626);">
+                    No hay proveedores registrados. Registre uno en CU5 antes de asociar.
+                </p>
+                <%
+                    } else {
+                %>
+                <select id="selectProveedor" name="proveedorId" required
+                        style="width:100%;padding:0.5rem 0.75rem;border:1px solid var(--border2);border-radius:var(--radius);font-size:0.875rem;background:var(--bg);color:var(--text);">
+                    <option value="">-- Seleccionar proveedor --</option>
+                    <% for (Proveedor p : proveedores) { %>
+                    <option value="<%= p.getId() %>"><%= p.getNombre() %> (<%= p.getCorreo() %>)</option>
+                    <% } %>
+                </select>
+                <% } %>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-toggle" onclick="cerrarModalAsociar()">Cancelar</button>
+                <% if (proveedores != null && !proveedores.isEmpty()) { %>
+                <button type="submit" class="btn btn-primary" style="margin-top:0;">Asociar</button>
+                <% } %>
+            </div>
+        </form>
+    </div>
+</div>
+
 <%-- Modal reduccion --%>
 <div id="modalReducir">
     <div class="modal-box">
@@ -321,5 +383,15 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/resources/js/insumos.js"></script>
+<script>
+function abrirModalAsociar(insumoId, insumoNombre) {
+    document.getElementById('modalAsociarInsumoId').value   = insumoId;
+    document.getElementById('modalAsociarNombreInsumo').textContent = insumoNombre;
+    document.getElementById('modalAsociar').classList.add('activo');
+}
+function cerrarModalAsociar() {
+    document.getElementById('modalAsociar').classList.remove('activo');
+}
+</script>
 </body>
 </html>
