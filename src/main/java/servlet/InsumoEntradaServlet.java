@@ -6,12 +6,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import model.Insumo;
 import model.OrdenDeCompra;
+import model.Proveedor;
 import service.InsumoService;
+import service.ProveedorService;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -37,10 +37,12 @@ import java.util.List;
 public class InsumoEntradaServlet extends HttpServlet {
 
     private InsumoService insumoService;
+    private ProveedorService proveedorService;
 
     @Override
     public void init() {
-        insumoService = new InsumoService();
+        insumoService    = new InsumoService();
+        proveedorService = new ProveedorService();
     }
 
     // ── GET: mostrar inventario centralizado ────────────────────────────────
@@ -48,9 +50,11 @@ public class InsumoEntradaServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        // Trazabilidad → DA paso "listar insumos del inventario centralizado"
         List<Insumo> insumos = insumoService.listarTodosInsumos();
         req.setAttribute("insumos", insumos);
+
+        java.util.List<Proveedor> proveedores = proveedorService.listarProveedores();
+        req.setAttribute("proveedores", proveedores);
 
         req.getRequestDispatcher("/WEB-INF/views/cu3-insumos-entrada.jsp")
                 .forward(req, resp);
@@ -66,6 +70,8 @@ public class InsumoEntradaServlet extends HttpServlet {
 
         if ("reducir".equals(accion)) {
             procesarReduccion(req, resp);
+        } else if ("asociar".equals(accion)) {
+            procesarAsociacion(req, resp);
         } else {
             procesarRegistroEntrada(req, resp);
         }
@@ -111,18 +117,49 @@ public class InsumoEntradaServlet extends HttpServlet {
             // Comprobante de recepción (Generador de Comprobantes del diagrama de robustez)
             req.setAttribute("comprobante", orden);
             req.setAttribute("insumos", insumoService.listarTodosInsumos());
+            req.setAttribute("proveedores", proveedorService.listarProveedores());
             req.getRequestDispatcher("/WEB-INF/views/cu3-insumos-entrada.jsp")
                     .forward(req, resp);
 
         } catch (Exception e) {
             req.setAttribute("error", e.getMessage());
             req.setAttribute("insumos", insumoService.listarTodosInsumos());
+            req.setAttribute("proveedores", proveedorService.listarProveedores());
             req.getRequestDispatcher("/WEB-INF/views/cu3-insumos-entrada.jsp")
                     .forward(req, resp);
         }
     }
 
     // ── Procesar reducción de stock ──────────────────────────────────────────
+    private void procesarAsociacion(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+
+        String insumoIdStr    = req.getParameter("insumoId");
+        String proveedorIdStr = req.getParameter("proveedorId");
+
+        try {
+            Long insumoId    = Long.parseLong(insumoIdStr);
+            Long proveedorId = Long.parseLong(proveedorIdStr);
+
+            insumoService.asociarProveedor(insumoId, proveedorId);
+            resp.sendRedirect(req.getContextPath() + "/insumos/entrada?asociadoOk=1");
+
+        } catch (IllegalStateException e) {
+            req.setAttribute("errorAsociacion", e.getMessage());
+            req.setAttribute("insumos", insumoService.listarTodosInsumos());
+            req.setAttribute("proveedores", proveedorService.listarProveedores());
+            req.getRequestDispatcher("/WEB-INF/views/cu3-insumos-entrada.jsp")
+                    .forward(req, resp);
+
+        } catch (Exception e) {
+            req.setAttribute("errorAsociacion", e.getMessage());
+            req.setAttribute("insumos", insumoService.listarTodosInsumos());
+            req.setAttribute("proveedores", proveedorService.listarProveedores());
+            req.getRequestDispatcher("/WEB-INF/views/cu3-insumos-entrada.jsp")
+                    .forward(req, resp);
+        }
+    }
+
     private void procesarReduccion(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
@@ -141,6 +178,7 @@ public class InsumoEntradaServlet extends HttpServlet {
         } catch (Exception e) {
             req.setAttribute("errorReduccion", e.getMessage());
             req.setAttribute("insumos", insumoService.listarTodosInsumos());
+            req.setAttribute("proveedores", proveedorService.listarProveedores());
             req.getRequestDispatcher("/WEB-INF/views/cu3-insumos-entrada.jsp")
                     .forward(req, resp);
         }
