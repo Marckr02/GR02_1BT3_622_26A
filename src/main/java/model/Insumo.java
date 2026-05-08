@@ -2,9 +2,12 @@ package model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -26,6 +29,10 @@ public class Insumo {
 
     @Column(nullable = false)
     private Double stockMinimo;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "proveedor_id")
+    private Proveedor proveedor;
 
     public Long getId() {
         return id;
@@ -65,6 +72,14 @@ public class Insumo {
 
     public void setStockMinimo(Double stockMinimo) {
         this.stockMinimo = stockMinimo;
+    }
+
+    public Proveedor getProveedor() {
+        return proveedor;
+    }
+
+    public void setProveedor(Proveedor proveedor) {
+        this.proveedor = proveedor;
     }
 }
 
