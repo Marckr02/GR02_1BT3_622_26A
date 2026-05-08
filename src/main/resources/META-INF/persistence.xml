@@ -28,6 +28,9 @@
         <class>model.AlertaStock</class>
         <class>model.NivelAlerta</class>
 
+        <!-- Iteración 1 HU1: Gestión de Proveedores -->
+        <class>model.Proveedor</class>
+
         <properties>
             <property name="jakarta.persistence.jdbc.driver"   value="org.h2.Driver"/>
             <!-- Base de datos en memoria: funciona igual en local y en Docker -->
