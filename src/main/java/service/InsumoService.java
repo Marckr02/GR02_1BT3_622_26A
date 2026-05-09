@@ -3,10 +3,12 @@ package service;
 import config.HibernateUtil;
 import dao.InsumoDaoHibernate;
 import dao.OrdenDeCompraDaoHibernate;
+import dao.ProveedorDaoHibernate;
 import model.DetalleOrden;
 import model.EstadoOrden;
 import model.Insumo;
 import model.OrdenDeCompra;
+import model.Proveedor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
@@ -37,13 +39,14 @@ public class InsumoService {
     private final InsumoDaoHibernate insumoDao;
     private final OrdenDeCompraDaoHibernate ordenDao;
     private final MenuService menuService;
-    /** Tarea 3: integración con el sistema de alertas */
     private final AlertaService alertaService;
+    private final ProveedorDaoHibernate proveedorDao;
 
     public InsumoService() {
         this.insumoDao    = new InsumoDaoHibernate();
         this.ordenDao     = new OrdenDeCompraDaoHibernate();
         this.alertaService = new AlertaService();
+        this.proveedorDao  = new ProveedorDaoHibernate();
         inicializarInsumosBase();
         this.menuService  = new MenuService();
         menuService.sincronizarDisponibilidadMenu();
@@ -237,5 +240,21 @@ public class InsumoService {
 
     public boolean tieneStock(Insumo insumo) {
         return insumo != null && insumo.getCantidad() > 0;
+    }
+
+    public Insumo asociarProveedor(Long insumoId, Long proveedorId) {
+        Insumo insumo = insumoDao.findById(insumoId)
+                .orElseThrow(() -> new IllegalArgumentException("Insumo no encontrado con id=" + insumoId));
+
+        java.util.List<Proveedor> proveedores = proveedorDao.findAll();
+        if (proveedores.isEmpty()) {
+            throw new IllegalStateException("Debe registrar al menos un proveedor antes de realizar la asociación.");
+        }
+
+        Proveedor proveedor = proveedorDao.findById(proveedorId)
+                .orElseThrow(() -> new IllegalArgumentException("Proveedor no encontrado con id=" + proveedorId));
+
+        insumo.setProveedor(proveedor);
+        return insumoDao.update(insumo);
     }
 }
