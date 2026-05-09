@@ -19,7 +19,7 @@ public class AlertaService {
     }
 
     // Constructor para inyección en tests
-    AlertaService(AlertaDaoHibernate alertaDao) {
+    public AlertaService(AlertaDaoHibernate alertaDao) {
         this.alertaDao = alertaDao;
     }
 
