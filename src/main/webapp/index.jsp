@@ -28,6 +28,7 @@
         <% if (rolActivo == Rol.ADMIN_BODEGA) { %>
         <a href="${pageContext.request.contextPath}/insumos/entrada">CU3 · Insumos</a>
         <a href="${pageContext.request.contextPath}/menu/bloqueo">CU4 · Bloqueo</a>
+        <a href="${pageContext.request.contextPath}/proveedores">CU5 · Proveedores</a>
         <% } %>
         <a href="${pageContext.request.contextPath}/login?logout=1"
            onclick="fetch('${pageContext.request.contextPath}/logout', {method:'POST'}).then(()=>window.location='${pageContext.request.contextPath}/login')">
@@ -67,6 +68,11 @@
             <div class="cu-label">Incremento 2 · CU4</div>
             <div class="cu-title">Bloqueo de Menú</div>
             <div class="cu-desc">Desactivación automática de platos cuando los insumos alcanzan nivel crítico</div>
+        </a>
+        <a href="${pageContext.request.contextPath}/proveedores" class="stat-card">
+            <div class="cu-label">Iteración 1 · CU5</div>
+            <div class="cu-title">Gestión de Proveedores</div>
+            <div class="cu-desc">Registro de proveedores con nombre, teléfono y correo para facilitar el reabastecimiento</div>
         </a>
         <% } %>
     </div>

@@ -2,12 +2,6 @@ package model;
 
 import jakarta.persistence.*;
 
-/**
- * Entidad que representa un proveedor de insumos.
- *
- * Trazabilidad – TAREA 1.1 HU3 (Marco)
- *   atributos: id, nombre, telefono, correo
- */
 @Entity
 @Table(name = "proveedor")
 public class Proveedor {
@@ -16,71 +10,32 @@ public class Proveedor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 120)
+    @Column(nullable = false, length = 100)
     private String nombre;
 
     @Column(nullable = false, length = 20)
     private String telefono;
 
-    @Column(nullable = false, length = 120)
+    @Column(nullable = false, length = 100)
     private String correo;
-
-    // ── Constructores ─────────────────────────────────────────────────────────
 
     public Proveedor() {}
 
     public Proveedor(String nombre, String telefono, String correo) {
-        validar(nombre, telefono, correo);
-        this.nombre   = nombre.trim();
-        this.telefono = telefono.trim();
-        this.correo   = correo.trim();
+        this.nombre   = nombre;
+        this.telefono = telefono;
+        this.correo   = correo;
     }
-
-    // ── Validación (refactorización: responsabilidad separada) ────────────────
-
-    /**
-     * Valida que los campos obligatorios no sean nulos ni vacíos.
-     * Extraído como método privado para separar la responsabilidad de validación
-     * de la de asignación de atributos.
-     */
-    private void validar(String nombre, String telefono, String correo) {
-        if (nombre == null || nombre.trim().isEmpty()) {
-            throw new IllegalArgumentException("El nombre del proveedor es obligatorio.");
-        }
-        if (telefono == null || telefono.trim().isEmpty()) {
-            throw new IllegalArgumentException("El teléfono del proveedor es obligatorio.");
-        }
-        if (correo == null || correo.trim().isEmpty()) {
-            throw new IllegalArgumentException("El correo del proveedor es obligatorio.");
-        }
-    }
-
-    // ── Getters / Setters ─────────────────────────────────────────────────────
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
     public String getNombre() { return nombre; }
-    public void setNombre(String nombre) {
-        if (nombre == null || nombre.trim().isEmpty()) {
-            throw new IllegalArgumentException("El nombre del proveedor es obligatorio.");
-        }
-        this.nombre = nombre.trim();
-    }
+    public void setNombre(String n) { this.nombre = n; }
 
     public String getTelefono() { return telefono; }
-    public void setTelefono(String telefono) {
-        if (telefono == null || telefono.trim().isEmpty()) {
-            throw new IllegalArgumentException("El teléfono del proveedor es obligatorio.");
-        }
-        this.telefono = telefono.trim();
-    }
+    public void setTelefono(String t) { this.telefono = t; }
 
     public String getCorreo() { return correo; }
-    public void setCorreo(String correo) {
-        if (correo == null || correo.trim().isEmpty()) {
-            throw new IllegalArgumentException("El correo del proveedor es obligatorio.");
-        }
-        this.correo = correo.trim();
-    }
+    public void setCorreo(String c) { this.correo = c; }
 }
