@@ -1,118 +1,93 @@
 package service;
 
-import dao.ProveedorDao;
 import dao.ProveedorDaoHibernate;
 import model.Proveedor;
 
+import java.util.List;
+
 /**
- * ProveedorService — FASE REFACTOR.
+ * Servicio de negocio para la gestión de proveedores.
  *
- * ─── HISTORIA TDD ─────────────────────────────────────────────────────────────
+ * Trazabilidad – TAREA 2.2 HU3 (Rubén)
  *
- * FASE RED (Tests 1–4 FALLAN):
- *   Se escribieron primero los cuatro tests en ProveedorServiceTest con el DAO
- *   mockeado. En esta fase, registrarProveedor() no existía, por lo que los
- *   tests fallaban con errores de compilación y/o AssertionError.
- *
- * FASE GREEN (Tests 1–4 PASAN — implementación mínima):
- *   Se implementó registrarProveedor() con la lógica mínima necesaria:
- *     1. Validar que ningún campo sea nulo o vacío → lanzar IllegalArgumentException.
- *     2. Llamar a proveedorDao.save(proveedor) y retornar el objeto guardado.
- *   Los cuatro tests pasaron sin refactorización adicional.
- *
- * FASE REFACTOR (código actual):
- *   REFACTOR 1 — Extraer método privado validarCamposObligatorios():
- *     La validación de los tres campos se concentra en un único método privado
- *     con nombre expresivo, eliminando la duplicación de llamadas a esCampoVacio()
- *     dentro de registrarProveedor() y mejorando la legibilidad.
- *
- *   REFACTOR 2 — Extraer método privado esCampoVacio():
- *     La condición de campo nulo/vacío/solo-espacios se encapsula en un método
- *     reutilizable. Esto evita repetir "== null || .trim().isEmpty()" en cada
- *     validación y centraliza la lógica de "campo en blanco".
- *
- *   Los cuatro tests siguen pasando sin ninguna modificación.
- *
- * ─── TRAZABILIDAD ─────────────────────────────────────────────────────────────
- *
- * HU1 – Iteración 1: Registrar Proveedor
- *   Criterio de Aceptación Escenario 1 → cubierto por Test 1 y Test 3
- *   Criterio de Aceptación Escenario 2 → cubierto por Test 2 y Test 4
- *
- * Diagrama de Robustez:
- *   ProveedorService actúa como objeto de Control entre el servlet (Boundary)
- *   y el ProveedorDao (Entidad).
- *
- * Tarea T1.2 — HU1, Iteración 1
+ * Refactorización: la validación de campos se extrae al método privado
+ * validarCampos() para que registrar() actúe como orquestador limpio.
  */
 public class ProveedorService {
 
-    private static final String ERROR_CAMPOS_REQUERIDOS =
-            "Todos los campos son obligatorios: nombre, teléfono y correo.";
+    private final ProveedorDaoHibernate proveedorDao;
 
-    private final ProveedorDao proveedorDao;
+    public ProveedorService() {
+        this.proveedorDao = new ProveedorDaoHibernate();
+    }
 
-    // ── Constructores ─────────────────────────────────────────────────────
-
-    public ProveedorService(ProveedorDao proveedorDao) {
+    // Constructor para inyección en tests
+    ProveedorService(ProveedorDaoHibernate proveedorDao) {
         this.proveedorDao = proveedorDao;
     }
 
-    public ProveedorService() {
-        this(new ProveedorDaoHibernate());
-    }
-
-    // ── Caso de Uso Principal ─────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
+    // REGISTRO
+    // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * registrarProveedor(proveedor) : Proveedor
+     * Registra un nuevo proveedor en el sistema.
+     * Valida campos obligatorios y unicidad de correo antes de persistir.
      *
-     * Orquesta el registro de un nuevo proveedor:
-     *   1. validarCamposObligatorios() → verifica nombre, teléfono y correo.
-     *   2. proveedorDao.save()         → persiste el proveedor en la BD.
-     *
-     * Lanza IllegalArgumentException si algún campo obligatorio está vacío.
-     *
-     * Criterio de Aceptación HU1:
-     *   Escenario 1 — campos completos: retorna el proveedor registrado.
-     *   Escenario 2 — campos vacíos   : lanza IllegalArgumentException.
+     * @param nombre   nombre del proveedor
+     * @param telefono teléfono de contacto
+     * @param correo   correo electrónico (debe ser único)
+     * @return el proveedor persistido
+     * @throws IllegalArgumentException si algún campo es inválido o el correo ya existe
      */
-    public Proveedor registrarProveedor(Proveedor proveedor) {
-        validarCamposObligatorios(proveedor);
+    public Proveedor registrar(String nombre, String telefono, String correo) {
+        validarCampos(nombre, telefono, correo);
+        validarCorreoUnico(correo);
+        Proveedor proveedor = new Proveedor(nombre, telefono, correo);
         return proveedorDao.save(proveedor);
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // CONSULTA
+    // ─────────────────────────────────────────────────────────────────────────
+
     /**
-     * listarProveedores() : List<Proveedor>
-     *
-     * Retorna todos los proveedores registrados en la BD.
-     * Usado por ProveedorServlet.doGet() para poblar la tabla de la vista.
-     * (Preparación para HU3 — Consultar Listado de Proveedores)
+     * Devuelve todos los proveedores ordenados alfabéticamente.
      */
-    public java.util.List<Proveedor> listarProveedores() {
-        return proveedorDao.findAll();
+    public List<Proveedor> listar() {
+        return proveedorDao.findAllOrdenados();
     }
 
-    // ── FASE REFACTOR: métodos privados extraídos ─────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
+    // VALIDACIONES (refactorización: extraídas como métodos privados)
+    // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * REFACTOR 1: Extraído de registrarProveedor().
-     * Centraliza la validación de los tres campos obligatorios.
-     * Lanza IllegalArgumentException con mensaje claro si alguno falla.
+     * Valida que los campos obligatorios no sean nulos, vacíos ni solo espacios.
+     * Centraliza todas las validaciones de formato en un único punto.
      */
-    private void validarCamposObligatorios(Proveedor proveedor) {
-        if (esCampoVacio(proveedor.getNombre())
-                || esCampoVacio(proveedor.getTelefono())
-                || esCampoVacio(proveedor.getCorreo())) {
-            throw new IllegalArgumentException(ERROR_CAMPOS_REQUERIDOS);
+    private void validarCampos(String nombre, String telefono, String correo) {
+        if (nombre == null || nombre.trim().isEmpty()) {
+            throw new IllegalArgumentException("El nombre del proveedor es obligatorio.");
+        }
+        if (telefono == null || telefono.trim().isEmpty()) {
+            throw new IllegalArgumentException("El teléfono del proveedor es obligatorio.");
+        }
+        if (correo == null || correo.trim().isEmpty()) {
+            throw new IllegalArgumentException("El correo del proveedor es obligatorio.");
+        }
+        if (!correo.contains("@")) {
+            throw new IllegalArgumentException("El correo del proveedor no es válido.");
         }
     }
 
     /**
-     * REFACTOR 2: Extraído de validarCamposObligatorios().
-     * Determina si un campo de texto es nulo, vacío o solo espacios en blanco.
+     * Verifica que el correo no esté registrado por otro proveedor.
      */
-    private boolean esCampoVacio(String campo) {
-        return campo == null || campo.trim().isEmpty();
+    private void validarCorreoUnico(String correo) {
+        proveedorDao.findByCorreo(correo.trim()).ifPresent(p -> {
+            throw new IllegalArgumentException(
+                    "Ya existe un proveedor registrado con el correo: " + correo);
+        });
     }
 }
