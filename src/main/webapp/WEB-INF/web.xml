@@ -8,35 +8,36 @@
 
     <!-- ══════════════════════════════════════════════════════════════════════
          FILTRO DE AUTENTICACIÓN Y CONTROL DE ACCESO POR ROL
-         HU: Restringir el acceso a vistas según el rol del usuario autenticado
          ══════════════════════════════════════════════════════════════════════ -->
-        <filter>
-            <filter-name>AuthFilter</filter-name>
-            <filter-class>servlet.AuthFilter</filter-class>
-        </filter>
-        <filter-mapping>
-            <filter-name>AuthFilter</filter-name>
-            <url-pattern>/pedidos/*</url-pattern>
-        </filter-mapping>
-        <filter-mapping>
-            <filter-name>AuthFilter</filter-name>
-            <url-pattern>/insumos/*</url-pattern>
-        </filter-mapping>
-        <filter-mapping>
-            <filter-name>AuthFilter</filter-name>
-            <url-pattern>/menu/*</url-pattern>
-        </filter-mapping>
-        <filter-mapping>
-            <filter-name>AuthFilter</filter-name>
-            <url-pattern>/dashboard</url-pattern>
-        </filter-mapping>
-
-
-        <!-- Tarea 4: proteger el historial de alertas (requiere sesión activa)  -->
+    <filter>
+        <filter-name>AuthFilter</filter-name>
+        <filter-class>servlet.AuthFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>AuthFilter</filter-name>
+        <url-pattern>/pedidos/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AuthFilter</filter-name>
+        <url-pattern>/insumos/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AuthFilter</filter-name>
+        <url-pattern>/menu/*</url-pattern>
+    </filter-mapping>
+    <filter-mapping>
+        <filter-name>AuthFilter</filter-name>
+        <url-pattern>/dashboard</url-pattern>
+    </filter-mapping>
     <filter-mapping>
         <filter-name>AuthFilter</filter-name>
         <url-pattern>/alertas/*</url-pattern>
-    </filter-mapping>  
+    </filter-mapping>
+    <!-- HU3: proteger rutas de proveedores (ADMIN_BODEGA) -->
+    <filter-mapping>
+        <filter-name>AuthFilter</filter-name>
+        <url-pattern>/proveedores/*</url-pattern>
+    </filter-mapping>
 
     <!-- ══════════════════════════════════════════════════════════════════════
          SERVLETS EXISTENTES
@@ -108,9 +109,6 @@
         <url-pattern>/menu/bloqueo</url-pattern>
     </servlet-mapping>
 
-    <!-- ══════════════════════════════════════════════════════════════════════
-         TAREA 4 – Historial de Alertas de Stock
-         ══════════════════════════════════════════════════════════════════════ -->
     <servlet>
         <servlet-name>AlertaHistorialServlet</servlet-name>
         <servlet-class>servlet.AlertaHistorialServlet</servlet-class>
@@ -119,6 +117,19 @@
     <servlet-mapping>
         <servlet-name>AlertaHistorialServlet</servlet-name>
         <url-pattern>/alertas/historial</url-pattern>
+    </servlet-mapping>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         HU3 – Gestión de Proveedores (TAREA 3.1 HU3 - Álvaro)
+         ══════════════════════════════════════════════════════════════════════ -->
+    <servlet>
+        <servlet-name>ProveedorServlet</servlet-name>
+        <servlet-class>servlet.ProveedorServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ProveedorServlet</servlet-name>
+        <url-pattern>/proveedores/lista</url-pattern>
     </servlet-mapping>
 
     <welcome-file-list>
