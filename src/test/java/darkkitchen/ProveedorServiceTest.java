@@ -67,7 +67,7 @@ class ProveedorServiceTest {
     void given_proveedor_completo_when_registrar_then_retorna_proveedor_guardado() {
         // Arrange
         Proveedor proveedor = new Proveedor("Distribuidora Los Andes", "0991234567", "contacto@losandes.com");
-        when(proveedorDaoMock.save(proveedor)).thenReturn(proveedor);
+        when(proveedorDaoMock.save(any())).thenReturn(proveedor);
 
         // Act
         Proveedor resultado = service.registrar("Distribuidora Los Andes", "0991234567", "contacto@losandes.com");
