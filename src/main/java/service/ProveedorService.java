@@ -1,5 +1,6 @@
 package service;
 
+import dao.ProveedorDao;
 import dao.ProveedorDaoHibernate;
 import model.Proveedor;
 
@@ -15,14 +16,14 @@ import java.util.List;
  */
 public class ProveedorService {
 
-    private final ProveedorDaoHibernate proveedorDao;
+    private final ProveedorDao proveedorDao;
 
     public ProveedorService() {
-        this.proveedorDao = new ProveedorDaoHibernate();
+        this(ServiceFactory.createProveedorDao());
     }
 
     // Constructor para inyección en tests
-    ProveedorService(ProveedorDaoHibernate proveedorDao) {
+    public ProveedorService(ProveedorDao proveedorDao) {
         this.proveedorDao = proveedorDao;
     }
 
