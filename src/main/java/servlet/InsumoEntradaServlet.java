@@ -53,7 +53,7 @@ public class InsumoEntradaServlet extends HttpServlet {
         List<Insumo> insumos = insumoService.listarTodosInsumos();
         req.setAttribute("insumos", insumos);
 
-        java.util.List<Proveedor> proveedores = proveedorService.listarProveedores();
+        java.util.List<Proveedor> proveedores = proveedorService.listar();
         req.setAttribute("proveedores", proveedores);
 
         req.getRequestDispatcher("/WEB-INF/views/cu3-insumos-entrada.jsp")
@@ -117,14 +117,14 @@ public class InsumoEntradaServlet extends HttpServlet {
             // Comprobante de recepción (Generador de Comprobantes del diagrama de robustez)
             req.setAttribute("comprobante", orden);
             req.setAttribute("insumos", insumoService.listarTodosInsumos());
-            req.setAttribute("proveedores", proveedorService.listarProveedores());
+            req.setAttribute("proveedores", proveedorService.listar());
             req.getRequestDispatcher("/WEB-INF/views/cu3-insumos-entrada.jsp")
                     .forward(req, resp);
 
         } catch (Exception e) {
             req.setAttribute("error", e.getMessage());
             req.setAttribute("insumos", insumoService.listarTodosInsumos());
-            req.setAttribute("proveedores", proveedorService.listarProveedores());
+            req.setAttribute("proveedores", proveedorService.listar());
             req.getRequestDispatcher("/WEB-INF/views/cu3-insumos-entrada.jsp")
                     .forward(req, resp);
         }
@@ -147,14 +147,14 @@ public class InsumoEntradaServlet extends HttpServlet {
         } catch (IllegalStateException e) {
             req.setAttribute("errorAsociacion", e.getMessage());
             req.setAttribute("insumos", insumoService.listarTodosInsumos());
-            req.setAttribute("proveedores", proveedorService.listarProveedores());
+            req.setAttribute("proveedores", proveedorService.listar());
             req.getRequestDispatcher("/WEB-INF/views/cu3-insumos-entrada.jsp")
                     .forward(req, resp);
 
         } catch (Exception e) {
             req.setAttribute("errorAsociacion", e.getMessage());
             req.setAttribute("insumos", insumoService.listarTodosInsumos());
-            req.setAttribute("proveedores", proveedorService.listarProveedores());
+            req.setAttribute("proveedores", proveedorService.listar());
             req.getRequestDispatcher("/WEB-INF/views/cu3-insumos-entrada.jsp")
                     .forward(req, resp);
         }
@@ -178,7 +178,7 @@ public class InsumoEntradaServlet extends HttpServlet {
         } catch (Exception e) {
             req.setAttribute("errorReduccion", e.getMessage());
             req.setAttribute("insumos", insumoService.listarTodosInsumos());
-            req.setAttribute("proveedores", proveedorService.listarProveedores());
+            req.setAttribute("proveedores", proveedorService.listar());
             req.getRequestDispatcher("/WEB-INF/views/cu3-insumos-entrada.jsp")
                     .forward(req, resp);
         }
