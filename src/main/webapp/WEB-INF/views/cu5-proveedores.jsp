@@ -131,7 +131,7 @@
     <div class="navbar-links">
         <a href="${pageContext.request.contextPath}/insumos/entrada">CU3 · Insumos</a>
         <a href="${pageContext.request.contextPath}/menu/bloqueo">CU4 · Bloqueo</a>
-        <a href="${pageContext.request.contextPath}/proveedores" class="active">CU5 · Proveedores</a>
+        <a href="${pageContext.request.contextPath}/proveedores/lista" class="active">CU5 · Proveedores</a>
         <a href="${pageContext.request.contextPath}/login?logout=1"
            onclick="fetch('${pageContext.request.contextPath}/logout', {method:'POST'}).then(()=>window.location='${pageContext.request.contextPath}/login')">
             Cerrar sesión
@@ -165,7 +165,7 @@
     <%-- ── Formulario de registro de proveedor ────────────────────────────── --%>
     <div class="form-proveedor">
         <h3>Registrar nuevo proveedor</h3>
-        <form method="post" action="${pageContext.request.contextPath}/proveedores">
+        <form method="post" action="${pageContext.request.contextPath}/proveedores/lista">
             <div class="form-row">
                 <div class="form-group">
                     <label for="nombre">Nombre *</label>

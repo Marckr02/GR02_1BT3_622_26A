@@ -11,64 +11,45 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * ProveedorServlet — Boundary del módulo de Gestión de Proveedores.
+ * Servlet de frontera para la gestión de proveedores.
  *
- * ─── TRAZABILIDAD ─────────────────────────────────────────────────────────────
+ * Trazabilidad – TAREA 3.1 HU3 (Álvaro)
  *
- * Diagrama de Actividades (HU1):
- *   GET  /proveedores  → muestra el formulario de registro y el listado de proveedores.
- *   POST /proveedores  → valida campos y registra el nuevo proveedor vía ProveedorService.
+ * GET  /proveedores/lista  → lista todos los proveedores
+ * POST /proveedores/lista  → registra un nuevo proveedor
  *
- * Diagrama de Robustez (HU1):
- *   Este servlet actúa como "Interfaz de Registro de Proveedor" (Boundary)
- *   que interactúa con el control "ProveedorService" y con la entidad "Proveedor".
+ * Refactorización: la lógica de forward se extrae al método privado
+ * despacharVista() para evitar duplicación entre doGet y el bloque POST.
  *
- * Criterio de Aceptación:
- *   Escenario 1 — campos completos  : redirige a GET con mensaje de éxito.
- *   Escenario 2 — campos incompletos: reenvía la vista con mensaje de error.
- *
- * Tarea T1.3 — HU1, Iteración 1
- * Rol: ADMIN_BODEGA (protegido por AuthFilter + web.xml)
+ * CORRECCIÓN 1: se eliminó @WebServlet para evitar conflicto con web.xml.
+ * CORRECCIÓN 2: se ajustaron los nombres de métodos a los del ProveedorService
+ *   real: listarProveedores() y registrarProveedor().
  */
 public class ProveedorServlet extends HttpServlet {
 
     private ProveedorService proveedorService;
 
     @Override
-    public void init() {
+    public void init() throws ServletException {
         proveedorService = new ProveedorService();
     }
 
-    // ── GET: mostrar formulario de registro + listado ─────────────────────
+    // ── GET: listar proveedores ───────────────────────────────────────────────
 
-    /**
-     * Diagrama de Actividades → paso "mostrar formulario y listado de proveedores".
-     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-
         List<Proveedor> proveedores = proveedorService.listarProveedores();
         req.setAttribute("proveedores", proveedores);
-
-        req.getRequestDispatcher("/WEB-INF/views/cu5-proveedores.jsp")
-                .forward(req, resp);
+        despacharVista(req, resp);
     }
 
-    // ── POST: registrar nuevo proveedor ──────────────────────────────────
+    // ── POST: registrar proveedor ─────────────────────────────────────────────
 
-    /**
-     * Diagrama de Actividades → paso "administrador presiona Guardar".
-     *
-     * Flujo:
-     *   1. Leer parámetros del formulario.
-     *   2. Llamar a ProveedorService.registrarProveedor().
-     *   3a. Éxito → redirigir a GET con param "registrado=ok" (PRG pattern).
-     *   3b. Error → reenviar la vista con atributo "error" y mensaje.
-     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+        req.setCharacterEncoding("UTF-8");
 
         String nombre   = req.getParameter("nombre");
         String telefono = req.getParameter("telefono");
@@ -77,22 +58,25 @@ public class ProveedorServlet extends HttpServlet {
         try {
             Proveedor nuevo = new Proveedor(nombre, telefono, correo);
             proveedorService.registrarProveedor(nuevo);
-
-            // Escenario 1: registro exitoso — PRG para evitar reenvío del form
-            resp.sendRedirect(req.getContextPath() + "/proveedores?registrado=ok");
-
+            req.setAttribute("mensaje", "Proveedor registrado correctamente.");
         } catch (IllegalArgumentException e) {
-            // Escenario 2: campos vacíos — mostrar error en la misma vista
             req.setAttribute("error", e.getMessage());
-            req.setAttribute("nombre",   nombre);
-            req.setAttribute("telefono", telefono);
-            req.setAttribute("correo",   correo);
-
-            List<Proveedor> proveedores = proveedorService.listarProveedores();
-            req.setAttribute("proveedores", proveedores);
-
-            req.getRequestDispatcher("/WEB-INF/views/cu5-proveedores.jsp")
-                    .forward(req, resp);
         }
+
+        List<Proveedor> proveedores = proveedorService.listarProveedores();
+        req.setAttribute("proveedores", proveedores);
+        despacharVista(req, resp);
+    }
+
+    // ── Auxiliar (refactorización) ────────────────────────────────────────────
+
+    /**
+     * Centraliza el forward a la vista JSP.
+     * Evita duplicar la ruta de la vista en doGet y doPost.
+     */
+    private void despacharVista(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        req.getRequestDispatcher("/WEB-INF/views/cu5-proveedores.jsp")
+                .forward(req, resp);
     }
 }
