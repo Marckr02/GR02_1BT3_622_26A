@@ -4,7 +4,6 @@ import model.Proveedor;
 import service.ProveedorService;
 
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -21,8 +20,10 @@ import java.util.List;
  *
  * Refactorización: la lógica de forward se extrae al método privado
  * despacharVista() para evitar duplicación entre doGet y el bloque POST.
+ *
+ * CORRECCIÓN 1: se eliminó @WebServlet para evitar conflicto con web.xml.
+ * CORRECCIÓN 2: se mantiene la vista de HU3 cu5-proveedores.jsp.
  */
-@WebServlet("/proveedores/lista")
 public class ProveedorServlet extends HttpServlet {
 
     private ProveedorService proveedorService;
@@ -73,7 +74,7 @@ public class ProveedorServlet extends HttpServlet {
      */
     private void despacharVista(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        req.getRequestDispatcher("/WEB-INF/views/cu-proveedores.jsp")
+        req.getRequestDispatcher("/WEB-INF/views/cu5-proveedores.jsp")
                 .forward(req, resp);
     }
 }

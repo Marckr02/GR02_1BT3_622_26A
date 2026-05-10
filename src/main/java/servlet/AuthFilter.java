@@ -22,7 +22,7 @@ public class AuthFilter implements Filter {
         PERMISOS_RUTA.put("/insumos/entrada", Rol.ADMIN_BODEGA);
         PERMISOS_RUTA.put("/menu/bloqueo",    Rol.ADMIN_BODEGA);
         // Iteración 1 HU1 — solo el administrador de bodega puede gestionar proveedores
-        PERMISOS_RUTA.put("/proveedores",     Rol.ADMIN_BODEGA);
+        PERMISOS_RUTA.put("/proveedores/lista",     Rol.ADMIN_BODEGA);
     }
 
     @Override
