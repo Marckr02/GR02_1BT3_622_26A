@@ -121,6 +121,32 @@
         @media (max-width: 700px) {
             .form-row { grid-template-columns: 1fr; }
         }
+        /* ── Buscador ── */
+        .buscador-wrap {
+            margin-bottom: 1rem;
+        }
+        .buscador-wrap input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0.55rem 0.85rem;
+            border: 1px solid var(--border2);
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            background: var(--bg);
+            color: var(--text);
+        }
+        .buscador-wrap input:focus {
+            outline: none;
+            border-color: var(--accent, #2563eb);
+            box-shadow: 0 0 0 2px rgba(37,99,235,0.12);
+        }
+        .sin-resultados {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -192,9 +218,17 @@
 
     <%-- ── Listado de proveedores registrados ─────────────────────────────── --%>
     <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;">
-        <h3 style="font-size:0.95rem;font-weight:600;margin-bottom:1rem;color:var(--text);">
-            Proveedores registrados
-        </h3>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+            <h3 style="font-size:0.95rem;font-weight:600;color:var(--text);margin:0;">
+                Proveedores registrados
+            </h3>
+        </div>
+        <div class="buscador-wrap">
+            <input type="text" id="buscadorProveedor"
+                   placeholder="🔍 Buscar por nombre, teléfono o correo..."
+                   oninput="filtrarProveedores()">
+        </div>
+        <div class="sin-resultados" id="sinResultados">No se encontraron proveedores con ese criterio.</div>
 
         <%
             List<Proveedor> proveedores = (List<Proveedor>) request.getAttribute("proveedores");
@@ -213,12 +247,15 @@
                     <th>Correo</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="tablaProveedoresBody">
                 <%
                     int idx = 1;
                     for (Proveedor p : proveedores) {
                 %>
-                <tr>
+                <tr class="fila-proveedor"
+                    data-nombre="<%= p.getNombre().toLowerCase() %>"
+                    data-telefono="<%= p.getTelefono() %>"
+                    data-correo="<%= p.getCorreo().toLowerCase() %>">
                     <td><%= idx++ %></td>
                     <td><%= p.getNombre() %></td>
                     <td><%= p.getTelefono() %></td>
@@ -231,5 +268,29 @@
     </div>
 
 </div>
+
+<script>
+function filtrarProveedores() {
+    var filtro = document.getElementById('buscadorProveedor').value.toLowerCase().trim();
+    var filas  = document.querySelectorAll('.fila-proveedor');
+    var visibles = 0;
+
+    filas.forEach(function(fila) {
+        var nombre   = fila.getAttribute('data-nombre')   || '';
+        var telefono = fila.getAttribute('data-telefono') || '';
+        var correo   = fila.getAttribute('data-correo')   || '';
+
+        if (nombre.includes(filtro) || telefono.includes(filtro) || correo.includes(filtro)) {
+            fila.style.display = '';
+            visibles++;
+        } else {
+            fila.style.display = 'none';
+        }
+    });
+
+    document.getElementById('sinResultados').style.display =
+        (visibles === 0 && filtro !== '') ? 'block' : 'none';
+}
+</script>
 </body>
 </html>
