@@ -20,16 +20,16 @@ import static org.mockito.Mockito.*;
  *
  * FASE RED:
  *   Los cuatro tests se escribieron ANTES de implementar ProveedorService.
- *   Resultado: fallan con errores de compilación (método registrarProveedor()
+ *   Resultado: fallan con errores de compilación (método registrar()
  *   no existe) o AssertionError (lógica ausente).
  *
  * FASE GREEN:
- *   Se implementó registrarProveedor() con la lógica mínima necesaria:
+ *   Se implementó registrar() con la lógica mínima necesaria:
  *   validar campos vacíos + delegar al DAO. Los cuatro tests pasan.
  *
  * FASE REFACTOR:
- *   Se extrajeron los métodos privados validarCamposObligatorios() y
- *   esCampoVacio() en ProveedorService para mejorar la legibilidad.
+ *   Se extrajeron los métodos privados validarCampos() y validarCorreoUnico()
+ *   en ProveedorService para mejorar la legibilidad.
  *   Los cuatro tests siguen pasando sin ninguna modificación.
  *
  * ─── TRAZABILIDAD ─────────────────────────────────────────────────────────────
@@ -58,7 +58,7 @@ class ProveedorServiceTest {
      * Prueba Unitaria 1: Registro exitoso con datos completos y válidos.
      *
      * Dado:  un proveedor con nombre, teléfono y correo completos.
-     * Cuando: se llama a registrarProveedor().
+     * Cuando: se llama a registrar().
      * Entonces: el sistema guarda al proveedor y lo retorna sin lanzar excepción.
      *
      * Cubre: Criterio de Aceptación — Escenario 1.
@@ -70,7 +70,7 @@ class ProveedorServiceTest {
         when(proveedorDaoMock.save(proveedor)).thenReturn(proveedor);
 
         // Act
-        Proveedor resultado = service.registrarProveedor(proveedor);
+        Proveedor resultado = service.registrar("Distribuidora Los Andes", "0991234567", "contacto@losandes.com");
 
         // Assert
         assertNotNull(resultado,
@@ -83,7 +83,7 @@ class ProveedorServiceTest {
                 "El correo debe coincidir con el ingresado");
 
         // Verificar que el DAO fue llamado exactamente una vez
-        verify(proveedorDaoMock, times(1)).save(proveedor);
+        verify(proveedorDaoMock, times(1)).save(any());
 
         System.out.println("Test 1 OK — registro exitoso de proveedor");
     }
@@ -94,7 +94,7 @@ class ProveedorServiceTest {
      * Prueba Unitaria 2: Rechazo cuando el nombre del proveedor está vacío.
      *
      * Dado:  un proveedor con nombre vacío (""), teléfono y correo válidos.
-     * Cuando: se llama a registrarProveedor().
+     * Cuando: se llama a registrar().
      * Entonces: el sistema lanza IllegalArgumentException y NO llama al DAO.
      *
      * Cubre: Criterio de Aceptación — Escenario 2.
@@ -102,12 +102,10 @@ class ProveedorServiceTest {
     @Test
     void given_nombre_vacio_when_registrar_then_lanza_excepcion() {
         // Arrange — nombre intencionalmente vacío
-        Proveedor proveedor = new Proveedor("", "0991234567", "contacto@losandes.com");
-
         // Act & Assert — debe lanzar IllegalArgumentException
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> service.registrarProveedor(proveedor),
+                () -> service.registrar("", "0991234567", "contacto@losandes.com"),
                 "Debe lanzar IllegalArgumentException cuando el nombre está vacío"
         );
 
@@ -126,7 +124,7 @@ class ProveedorServiceTest {
      * Prueba Unitaria 3: El proveedor registrado queda disponible en el sistema.
      *
      * Dado:  un proveedor con todos los campos completos.
-     * Cuando: se llama a registrarProveedor().
+     * Cuando: se llama a registrar().
      * Entonces: el proveedor retornado tiene los mismos datos con los que fue creado.
      *
      * Verifica que el objeto persistido conserva la integridad de los datos
@@ -138,21 +136,21 @@ class ProveedorServiceTest {
     void given_proveedor_valido_when_registrar_then_datos_son_consistentes() {
         // Arrange
         Proveedor proveedor = new Proveedor("Proveedora Quito S.A.", "022345678", "ventas@quitosa.ec");
-        when(proveedorDaoMock.save(proveedor)).thenReturn(proveedor);
+        when(proveedorDaoMock.save(any())).thenReturn(proveedor);
 
         // Act
-        Proveedor resultado = service.registrarProveedor(proveedor);
+        Proveedor resultado = service.registrar("Proveedora Quito S.A.", "022345678", "ventas@quitosa.ec");
 
         // Assert — los datos del objeto retornado deben ser idénticos
-        assertEquals(proveedor.getNombre(),   resultado.getNombre(),
+        assertEquals("Proveedora Quito S.A.", resultado.getNombre(),
                 "El nombre debe ser el mismo tras el registro");
-        assertEquals(proveedor.getTelefono(), resultado.getTelefono(),
+        assertEquals("022345678", resultado.getTelefono(),
                 "El teléfono debe ser el mismo tras el registro");
-        assertEquals(proveedor.getCorreo(),   resultado.getCorreo(),
+        assertEquals("ventas@quitosa.ec", resultado.getCorreo(),
                 "El correo debe ser el mismo tras el registro");
 
-        // Verificar que se guardó exactamente el objeto proporcionado
-        verify(proveedorDaoMock, times(1)).save(proveedor);
+        // Verificar que se guardó exactamente una vez
+        verify(proveedorDaoMock, times(1)).save(any());
 
         System.out.println("Test 3 OK — datos consistentes tras registro");
     }
@@ -163,7 +161,7 @@ class ProveedorServiceTest {
      * Prueba Unitaria 4: Rechazo cuando el correo del proveedor es nulo.
      *
      * Dado:  un proveedor con nombre y teléfono válidos pero correo nulo.
-     * Cuando: se llama a registrarProveedor().
+     * Cuando: se llama a registrar().
      * Entonces: el sistema lanza IllegalArgumentException y NO llama al DAO.
      *
      * Cubre: Criterio de Aceptación — Escenario 2 (campo obligatorio nulo).
@@ -171,12 +169,10 @@ class ProveedorServiceTest {
     @Test
     void given_correo_nulo_when_registrar_then_lanza_excepcion() {
         // Arrange — correo intencionalmente nulo
-        Proveedor proveedor = new Proveedor("Bodega Central", "0987654321", null);
-
         // Act & Assert — debe lanzar IllegalArgumentException
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> service.registrarProveedor(proveedor),
+                () -> service.registrar("Bodega Central", "0987654321", null),
                 "Debe lanzar IllegalArgumentException cuando el correo es nulo"
         );
 

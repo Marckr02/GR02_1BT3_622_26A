@@ -30,8 +30,8 @@ class AsociarProveedorTest {
 
     @Test
     void escenario1_asociarProveedorNuevo_guardaRelacion() {
-        Proveedor p = proveedorService.registrarProveedor(
-                new Proveedor("Prov Frutas", "0991000001", "frutas@test.com"));
+        Proveedor p = proveedorService.registrar(
+                "Prov Frutas", "0991000001", "frutas@test.com");
 
         Insumo insumo = insumoDao.findAll().stream().findFirst()
                 .orElseThrow(() -> new RuntimeException("Sin insumos de prueba"));
@@ -44,10 +44,10 @@ class AsociarProveedorTest {
 
     @Test
     void escenario2_asociarNuevoProveedorReemplazaAnterior() {
-        Proveedor p1 = proveedorService.registrarProveedor(
-                new Proveedor("Prov A", "0991000002", "a@test.com"));
-        Proveedor p2 = proveedorService.registrarProveedor(
-                new Proveedor("Prov B", "0991000003", "b@test.com"));
+        Proveedor p1 = proveedorService.registrar(
+                "Prov A", "0991000002", "a@test.com");
+        Proveedor p2 = proveedorService.registrar(
+                "Prov B", "0991000003", "b@test.com");
 
         Insumo insumo = insumoDao.findAll().stream().findFirst()
                 .orElseThrow(() -> new RuntimeException("Sin insumos de prueba"));
@@ -82,8 +82,8 @@ class AsociarProveedorTest {
 
     @Test
     void asociarConInsumoInexistente_lanzaIllegalArgumentException() {
-        Proveedor p = proveedorService.registrarProveedor(
-                new Proveedor("Prov X", "0991000004", "x@test.com"));
+        Proveedor p = proveedorService.registrar(
+                "Prov X", "0991000004", "x@test.com");
 
         assertThrows(IllegalArgumentException.class,
                 () -> insumoService.asociarProveedor(99999L, p.getId()));
