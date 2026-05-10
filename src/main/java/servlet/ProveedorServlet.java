@@ -22,8 +22,7 @@ import java.util.List;
  * despacharVista() para evitar duplicación entre doGet y el bloque POST.
  *
  * CORRECCIÓN 1: se eliminó @WebServlet para evitar conflicto con web.xml.
- * CORRECCIÓN 2: se ajustaron los nombres de métodos a los del ProveedorService
- *   real: listarProveedores() y registrarProveedor().
+ * CORRECCIÓN 2: se mantiene la vista de HU3 cu5-proveedores.jsp.
  */
 public class ProveedorServlet extends HttpServlet {
 
@@ -39,7 +38,7 @@ public class ProveedorServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        List<Proveedor> proveedores = proveedorService.listarProveedores();
+        List<Proveedor> proveedores = proveedorService.listar();
         req.setAttribute("proveedores", proveedores);
         despacharVista(req, resp);
     }
@@ -56,14 +55,13 @@ public class ProveedorServlet extends HttpServlet {
         String correo   = req.getParameter("correo");
 
         try {
-            Proveedor nuevo = new Proveedor(nombre, telefono, correo);
-            proveedorService.registrarProveedor(nuevo);
+            proveedorService.registrar(nombre, telefono, correo);
             req.setAttribute("mensaje", "Proveedor registrado correctamente.");
         } catch (IllegalArgumentException e) {
             req.setAttribute("error", e.getMessage());
         }
 
-        List<Proveedor> proveedores = proveedorService.listarProveedores();
+        List<Proveedor> proveedores = proveedorService.listar();
         req.setAttribute("proveedores", proveedores);
         despacharVista(req, resp);
     }

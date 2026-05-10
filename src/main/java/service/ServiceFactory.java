@@ -33,6 +33,10 @@ public class ServiceFactory {
         return new OrdenDeCompraDaoHibernate();
     }
 
+    public static ProveedorDao createProveedorDao() {
+        return new ProveedorDaoHibernate();
+    }
+
     // Servicios
     public static UsuarioService createUsuarioService() {
         return new UsuarioService(createUsuarioDao());
@@ -52,11 +56,8 @@ public class ServiceFactory {
 
     // ── Iteración 1 HU1: Gestión de Proveedores ───────────────────────────
 
-    public static dao.ProveedorDao createProveedorDao() {
-        return new dao.ProveedorDaoHibernate();
-    }
 
-    public static service.ProveedorService createProveedorService() {
-        return new service.ProveedorService(createProveedorDao());
+    public static ProveedorService createProveedorService() {
+        return new ProveedorService(createProveedorDao());
     }
 }
