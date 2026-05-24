@@ -1,29 +1,188 @@
-# Docker
-# Build a Docker image
-# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+# ============================================================
+# Azure Pipeline – GR02_1BT3_622_26A
+# Proyecto: Sistema de Gestión de Dark Kitchens
+# Stack:    Java 21 · Maven · Hibernate · Tomcat 9 · Docker
+# ============================================================
 
 trigger:
-- main
+  branches:
+    include:
+      - main        # dispara en cada push a main
+  paths:
+    exclude:
+      - README.md
+      - '**/*.md'
 
-resources:
-- repo: self
+pr:
+  branches:
+    include:
+      - main        # valida cada Pull Request hacia main
 
+# ── Variables globales ───────────────────────────────────────
 variables:
-  tag: '$(Build.BuildId)'
+  MAVEN_CACHE_FOLDER: $(Pipeline.Workspace)/.m2/repository
+  MAVEN_OPTS: -Dmaven.repo.local=$(MAVEN_CACHE_FOLDER)
+  IMAGE_NAME: gr02-dark-kitchens
+  IMAGE_TAG:  $(Build.BuildId)
 
+# ── Etapas ───────────────────────────────────────────────────
 stages:
+
+# ============================================================
+# ETAPA 1 – Build y Tests
+# ============================================================
 - stage: Build
-  displayName: Build image
+  displayName: 'Build y Pruebas'
   jobs:
-  - job: Build
-    displayName: Build
+  - job: BuildJob
+    displayName: 'Compilar y ejecutar tests'
     pool:
-      vmImage: windows-latest
+      vmImage: ubuntu-latest       # Linux es más rápido y gratuito
+
     steps:
+
+    # 1. Configurar Java 21
+    - task: JavaToolInstaller@0
+      displayName: 'Instalar Java 21'
+      inputs:
+        versionSpec: '21'
+        jdkArchitectureOption: x64
+        jdkSourceOption: PreInstalled
+
+    # 2. Cache de dependencias Maven (acelera builds futuros)
+    - task: Cache@2
+      displayName: 'Cache Maven (.m2)'
+      inputs:
+        key: 'maven | "$(Agent.OS)" | pom.xml'
+        restoreKeys: |
+          maven | "$(Agent.OS)"
+          maven
+        path: $(MAVEN_CACHE_FOLDER)
+
+    # 3. Compilar y ejecutar tests
+    - task: Maven@4
+      displayName: 'mvn clean test package'
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'clean test package'
+        options: '$(MAVEN_OPTS) -B'        # -B = modo batch (sin colores interactivos)
+        publishJUnitResults: true
+        testResultsFiles: '**/surefire-reports/TEST-*.xml'
+        javaHomeOption: JDKVersion
+        jdkVersionOption: '1.21'
+        mavenVersionOption: Default
+
+    # 4. Publicar el .war como artefacto de la build
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publicar artefacto .war'
+      inputs:
+        pathToPublish: 'target/GR02_1BT3_622_26A.war'
+        artifactName: war-package
+        publishLocation: Container
+
+    # 5. Publicar resultados de tests (visible en la pestaña Tests)
+    - task: PublishTestResults@2
+      displayName: 'Publicar resultados de tests'
+      condition: always()             # publicar incluso si los tests fallan
+      inputs:
+        testResultsFormat: JUnit
+        testResultsFiles: '**/surefire-reports/TEST-*.xml'
+        failTaskOnFailedTests: true
+
+# ============================================================
+# ETAPA 2 – Docker Build & Push
+# Solo se ejecuta si el Build pasó Y es un push a main (no PR)
+# ============================================================
+- stage: Docker
+  displayName: 'Docker Build & Push'
+  dependsOn: Build
+  condition: >
+    and(
+      succeeded(),
+      eq(variables['Build.SourceBranch'], 'refs/heads/main')
+    )
+  jobs:
+  - job: DockerJob
+    displayName: 'Construir y publicar imagen Docker'
+    pool:
+      vmImage: ubuntu-latest
+
+    steps:
+
+    # 1. Descargar el .war generado en la etapa anterior
+    - task: DownloadBuildArtifacts@1
+      displayName: 'Descargar artefacto .war'
+      inputs:
+        buildType: current
+        artifactName: war-package
+        downloadPath: '$(System.ArtifactsDirectory)'
+
+    # 2. Mover el .war donde lo espera el Dockerfile
+    - script: |
+        mkdir -p target
+        cp $(System.ArtifactsDirectory)/war-package/GR02_1BT3_622_26A.war target/
+      displayName: 'Preparar target/ para Docker'
+
+    # 3. Build de la imagen Docker
+    #    Usa el Dockerfile existente (tomcat:9.0-jdk21)
     - task: Docker@2
-      displayName: Build an image
+      displayName: 'Docker build'
       inputs:
         command: build
-        dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+        repository: $(IMAGE_NAME)
+        dockerfile: Dockerfile
         tags: |
-          $(tag)
+          $(IMAGE_TAG)
+          latest
+
+    # ──────────────────────────────────────────────────────────
+    # OPCIONAL: descomentar este bloque para hacer push a
+    # Docker Hub o Azure Container Registry (ACR).
+    # Requiere crear una Service Connection en Azure DevOps.
+    # ──────────────────────────────────────────────────────────
+    # - task: Docker@2
+    #   displayName: 'Docker push a registry'
+    #   inputs:
+    #     command: push
+    #     containerRegistry: '<nombre-de-tu-service-connection>'
+    #     repository: '<tu-usuario>/<IMAGE_NAME>'
+    #     tags: |
+    #       $(IMAGE_TAG)
+    #       latest
+
+    # 4. Guardar la imagen como artefacto (tar) — útil si no hay registry
+    - script: |
+        docker save $(IMAGE_NAME):$(IMAGE_TAG) | gzip > $(Build.ArtifactStagingDirectory)/$(IMAGE_NAME)-$(IMAGE_TAG).tar.gz
+      displayName: 'Exportar imagen Docker como .tar.gz'
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publicar imagen Docker'
+      inputs:
+        pathToPublish: '$(Build.ArtifactStagingDirectory)'
+        artifactName: docker-image
+        publishLocation: Container
+
+# ============================================================
+# ETAPA 3 – Deploy (opcional, requiere configuración Azure)
+# Despliega el contenedor en Azure Web App for Containers
+# ============================================================
+# - stage: Deploy
+#   displayName: 'Deploy a Azure'
+#   dependsOn: Docker
+#   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+#   jobs:
+#   - deployment: DeployWebApp
+#     displayName: 'Deploy a Azure Web App'
+#     environment: production
+#     pool:
+#       vmImage: ubuntu-latest
+#     strategy:
+#       runOnce:
+#         deploy:
+#           steps:
+#           - task: AzureWebAppContainer@1
+#             displayName: 'Deploy contenedor a Azure Web App'
+#             inputs:
+#               azureSubscription: '<tu-service-connection-azure>'
+#               appName: '<nombre-de-tu-web-app>'
+#               containers: '<tu-registry>/<IMAGE_NAME>:$(IMAGE_TAG)'
